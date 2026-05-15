@@ -1,784 +1,921 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EPGS Test Rig — MIMIC Screen</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<title>EPGS TEST SCREEN</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#444;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:10px}
+#app{width:1440px;background:#fff;box-shadow:0 4px 20px #000a}
 
-    body {
-      background: #1a1a2e;
-      color: #e0e0e0;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      min-height: 100vh;
-    }
+/* HEADER */
+#hdr{height:58px;background:#1a5276;display:flex;align-items:center;padding:0 10px;gap:10px}
+.cabs-logo{width:46px;height:46px;border-radius:50%;border:3px solid #fff;background:#1a6b9a;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0}
+.cabs-logo span{color:#fff;font-size:7px;font-weight:bold;text-align:center;line-height:1.1}
+#hdr h1{color:#fff;font-size:22px;font-weight:bold;letter-spacing:3px;position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+#datetime{color:#fff;font-size:15px;white-space:nowrap}
+.dyna-logo{background:#e67e22;color:#fff;font-size:18px;font-weight:900;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:3px;font-style:italic}
 
-    /* ── Top navigation bar ── */
-    .navbar {
-      background: #0f3460;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 6px 10px;
-      border-bottom: 2px solid #e94560;
-      flex-wrap: wrap;
-    }
+/* TABS */
+#tabs{height:36px;background:#ecf0f1;border-bottom:2px solid #1a5276;display:flex;align-items:center;padding:0 8px;gap:2px}
+.tab{padding:3px 9px;font-size:10px;font-weight:bold;color:#1a5276;background:#fff;border:1px solid #1a5276;cursor:pointer;height:28px;display:flex;align-items:center;white-space:nowrap}
+.tab:hover,.tab.active{background:#1a5276;color:#fff}
+.lamps{margin-left:auto;display:flex;gap:12px;align-items:center}
+.lamp-grp{display:flex;flex-direction:column;align-items:center;gap:2px}
+.lamp-grp span{font-size:9px;font-weight:bold;color:#333}
+.lamp{width:22px;height:22px;border-radius:50%;border:2px solid #555}
+.lamp.red{background:radial-gradient(circle at 35% 35%,#ff6,#c00)}
+.lamp.ylw{background:radial-gradient(circle at 35% 35%,#fe6,#960)}
+.lamp.grn{background:radial-gradient(circle at 35% 35%,#6f6,#060)}
+.lamp.off{background:radial-gradient(circle at 35% 35%,#888,#333)}
 
-    .navbar h1 {
-      color: #e94560;
-      font-size: 14px;
-      font-weight: bold;
-      margin-right: 16px;
-      white-space: nowrap;
-    }
+/* SCREENS */
+#main-area{width:1440px;height:672px;position:relative;overflow:hidden}
+.screen{display:none;width:100%;height:100%}
+.screen.active{display:block}
 
-    .nav-btn {
-      background: #16213e;
-      border: 1px solid #0f3460;
-      color: #a0c4ff;
-      padding: 4px 10px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: background 0.2s;
-    }
+/* STATUS BAR */
+#sbar{height:42px;display:flex;align-items:center}
+#sbar-label{color:#fff;font-size:12px;font-weight:bold;padding:0 10px;background:#1a252f;height:100%;display:flex;align-items:center;white-space:nowrap;border-right:2px solid #e74c3c}
+#sbar-msg{flex:1;display:flex;align-items:center;justify-content:center;height:100%}
+#sbar-msg span{font-size:18px;font-weight:bold;color:#fff;letter-spacing:2px}
+#sbar-ack{color:#e67e22;font-size:11px;font-weight:bold;padding:0 12px;height:100%;display:flex;align-items:center;gap:4px;background:#1a252f;border-left:2px solid #555}
 
-    .nav-btn:hover, .nav-btn.active {
-      background: #e94560;
-      color: #fff;
-      border-color: #e94560;
-    }
+/* PARAM OVERLAY */
+.pov{display:none;position:absolute;top:35px;left:30px;background:#fdebd0;border:2px solid #1a5276;width:295px;z-index:40;padding:8px}
+.pov.show{display:block}
+.pov h3{background:#2980b9;color:#fff;font-size:11px;font-weight:bold;text-align:center;padding:4px;margin-bottom:6px}
+.pr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.pr label{font-size:11px;font-weight:bold;color:#222}
+.pv{background:#000;color:#0f0;font-size:12px;font-family:'Courier New',monospace;padding:2px 6px;min-width:58px;text-align:center;font-weight:bold}
 
-    .nav-btn.ctrl {
-      background: #1b4332;
-      border-color: #52b788;
-      color: #52b788;
-    }
+/* NAVIGATION */
+#nav{position:absolute;top:4px;right:4px;z-index:50;display:flex;gap:3px}
+.nav-btn{padding:3px 8px;font-size:10px;font-weight:bold;background:#1a5276;color:#fff;border:1px solid #fff;cursor:pointer}
+.nav-btn:hover{background:#2980b9}
 
-    .nav-btn.ctrl:hover {
-      background: #52b788;
-      color: #000;
-    }
+/* MODE selector */
+#mode-sel{position:absolute;bottom:6px;right:6px;z-index:30;background:rgba(255,255,255,.9);border:1px solid #aaa;padding:4px}
+#mode-sel label{font-size:9px;font-weight:bold;color:#333;display:block;margin-bottom:2px}
+#mode-select{font-size:11px;padding:2px 4px}
 
-    .nav-btn.stop {
-      background: #7b1111;
-      border-color: #e94560;
-      color: #e94560;
-    }
+/* CONTROL PANEL */
+#ctrl-screen{background:#555;display:flex;align-items:center;justify-content:center}
+.cp-outer{width:1050px;height:580px;border-radius:50px;background:#aaa;border:10px solid #777;padding:20px;display:flex;flex-direction:column;gap:14px}
+.cp-hdr{background:#222;border-radius:8px;padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
+.cp-hdr h2{color:#fff;font-size:18px;font-weight:bold;letter-spacing:2px}
+.cp-hdr .cp-dt{color:#fff;font-size:13px}
+.cp-body{display:flex;gap:16px;flex:1}
+.cp-switches{background:#bbb;border:2px solid #888;padding:14px;flex:1;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sw-item{display:flex;flex-direction:column;align-items:center;gap:3px}
+.sw-label{font-size:9px;font-weight:bold;color:#111;text-align:center;text-transform:uppercase}
+.sw-body{width:44px;height:64px;background:#777;border-radius:8px;border:2px solid #555;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:5px 0;position:relative;cursor:pointer}
+.sw-on{font-size:8px;font-weight:bold;color:#0a0}
+.sw-off{font-size:8px;font-weight:bold;color:#c00}
+.sw-lever{width:30px;height:18px;background:#999;border-radius:4px;border:1px solid #666;transition:top .15s}
+.cp-faults{background:#bbb;border:2px solid #888;padding:14px;flex:1.5}
+.cp-faults h4{font-size:10px;font-weight:bold;color:#222;margin-bottom:10px}
+.fl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fl-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+.fl-lamp{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f88,#b00);border:2px solid #777}
+.fl-label{font-size:8px;font-weight:bold;color:#111;text-align:center;line-height:1.2}
 
-    .nav-btn.stop:hover {
-      background: #e94560;
-      color: #fff;
-    }
-
-    /* ── Clock ── */
-    .clock {
-      margin-left: auto;
-      color: #52b788;
-      font-size: 13px;
-      white-space: nowrap;
-    }
-
-    /* ── Main layout ── */
-    .main {
-      display: grid;
-      grid-template-columns: 220px 1fr 200px;
-      grid-template-rows: auto auto;
-      gap: 8px;
-      padding: 8px;
-    }
-
-    /* ── Panel card ── */
-    .card {
-      background: #16213e;
-      border: 1px solid #0f3460;
-      border-radius: 4px;
-      padding: 8px;
-    }
-
-    .card-title {
-      font-size: 11px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #a0c4ff;
-      border-bottom: 1px solid #0f3460;
-      padding-bottom: 4px;
-      margin-bottom: 8px;
-    }
-
-    /* ── LED indicator ── */
-    .led {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-right: 6px;
-      vertical-align: middle;
-      box-shadow: 0 0 4px currentColor;
-    }
-
-    .led.green  { background: #52b788; color: #52b788; }
-    .led.red    { background: #e94560; color: #e94560; }
-    .led.yellow { background: #ffd166; color: #ffd166; }
-    .led.grey   { background: #555; color: #555; box-shadow: none; }
-
-    /* ── Readout box ── */
-    .readout {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 5px;
-    }
-
-    .readout label {
-      color: #8ab4f8;
-      font-size: 11px;
-    }
-
-    .readout .val {
-      background: #000;
-      border: 1px solid #0f3460;
-      color: #00ff88;
-      font-size: 12px;
-      padding: 1px 6px;
-      min-width: 70px;
-      text-align: right;
-      font-weight: bold;
-    }
-
-    .readout .val.fault {
-      color: #e94560;
-    }
-
-    .readout .val.warn {
-      color: #ffd166;
-    }
-
-    /* ── Drive stand block ── */
-    .drive-stand {
-      background: #1a2a4a;
-      border: 2px solid #a0c4ff;
-      border-radius: 4px;
-      padding: 8px;
-      margin-bottom: 8px;
-    }
-
-    .drive-stand .ds-title {
-      font-size: 12px;
-      font-weight: bold;
-      color: #ffd166;
-      margin-bottom: 8px;
-    }
-
-    .ds-row {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .motor-icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: 3px solid #52b788;
-      background: radial-gradient(circle, #1b4332 40%, #0d2218);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: #52b788;
-      font-weight: bold;
-      text-align: center;
-      flex-shrink: 0;
-      animation: spin-slow 4s linear infinite;
-    }
-
-    .motor-icon.stopped {
-      border-color: #555;
-      color: #555;
-      animation: none;
-    }
-
-    @keyframes spin-slow {
-      from { box-shadow: 0 0 0 0 #52b788, inset 0 0 6px #52b788; }
-      50%  { box-shadow: 0 0 8px 2px #52b788, inset 0 0 6px #52b788; }
-      to   { box-shadow: 0 0 0 0 #52b788, inset 0 0 6px #52b788; }
-    }
-
-    .gen-icon {
-      width: 52px;
-      height: 52px;
-      border: 2px solid #ffd166;
-      background: #1a1a00;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: #ffd166;
-      font-weight: bold;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .arrow {
-      font-size: 18px;
-      color: #52b788;
-      align-self: center;
-      flex-shrink: 0;
-    }
-
-    .ds-params {
-      flex: 1;
-      min-width: 100px;
-    }
-
-    /* ── LRU Rack ── */
-    .lru-rack {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .lru-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #0f1e3d;
-      border: 1px solid #0f3460;
-      padding: 4px 8px;
-      border-radius: 2px;
-    }
-
-    .lru-name {
-      font-weight: bold;
-      color: #a0c4ff;
-      font-size: 11px;
-      width: 70px;
-    }
-
-    .lru-status {
-      font-size: 11px;
-    }
-
-    /* ── Load Banks ── */
-    .load-bank {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 4px;
-      margin-top: 6px;
-    }
-
-    .load-cell {
-      background: #0f1e3d;
-      border: 1px solid #1a5276;
-      padding: 4px;
-      text-align: center;
-      border-radius: 2px;
-    }
-
-    .load-cell .lc-label {
-      font-size: 9px;
-      color: #8ab4f8;
-      display: block;
-    }
-
-    .load-cell .lc-val {
-      font-size: 12px;
-      color: #00ff88;
-      font-weight: bold;
-    }
-
-    /* ── Hydraulic system ── */
-    .hyd-bar {
-      background: #0d1117;
-      border: 1px solid #1a5276;
-      height: 12px;
-      border-radius: 2px;
-      margin-top: 4px;
-      overflow: hidden;
-    }
-
-    .hyd-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #1a5276, #2e86c1);
-      transition: width 0.5s;
-    }
-
-    /* ── HMDG bench ── */
-    .hmdg-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 6px;
-    }
-
-    .hmdg-unit {
-      flex: 1;
-      background: #0f1e3d;
-      border: 1px solid #9b59b6;
-      border-radius: 4px;
-      padding: 6px;
-      text-align: center;
-    }
-
-    .hmdg-unit .hu-label {
-      font-size: 10px;
-      color: #d7bde2;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .hmdg-circle {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid #9b59b6;
-      background: #1a0030;
-      margin: 0 auto 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      color: #d7bde2;
-      font-weight: bold;
-    }
-
-    /* ── Status bar ── */
-    .statusbar {
-      grid-column: 1 / -1;
-      background: #0f3460;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 4px 12px;
-      font-size: 11px;
-      border-top: 1px solid #e94560;
-      flex-wrap: wrap;
-    }
-
-    .sb-item { display: flex; align-items: center; gap: 4px; }
-    .sb-label { color: #8ab4f8; }
-    .sb-val   { color: #52b788; font-weight: bold; }
-
-    /* ── SFC panel ── */
-    .sfc-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-
-    .sfc-phase {
-      font-size: 11px;
-      color: #8ab4f8;
-    }
-
-    .contactor {
-      display: inline-block;
-      width: 16px;
-      height: 8px;
-      border: 1px solid #52b788;
-      background: #52b788;
-      border-radius: 1px;
-      vertical-align: middle;
-      margin: 0 2px;
-    }
-
-    .contactor.open {
-      background: transparent;
-      border-color: #555;
-    }
-
-    /* ── Fault table ── */
-    .fault-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-    .fault-table th {
-      background: #0f3460;
-      color: #a0c4ff;
-      font-size: 10px;
-      padding: 3px 6px;
-      text-align: left;
-    }
-    .fault-table td {
-      font-size: 10px;
-      padding: 3px 6px;
-      border-bottom: 1px solid #0f3460;
-    }
-    .fault-table tr:hover td { background: #1a2a4a; }
-    .ok    { color: #52b788; }
-    .fault { color: #e94560; }
-    .warn  { color: #ffd166; }
-
-    /* ── Section spanning ── */
-    .span2 { grid-column: span 2; }
-    .span3 { grid-column: 1 / -1; }
-  </style>
+/* TEST PANEL */
+#tp-screen{background:#d0d0d0;padding:12px}
+.tp-hdr{background:#fff;border:2px solid #333;text-align:center;padding:6px;font-size:14px;font-weight:bold;color:#333;margin-bottom:10px;letter-spacing:2px}
+.tp-body{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tp-col{background:#e8e8e8;border:2px solid #888;padding:8px}
+.tp-col h4{background:#2980b9;color:#fff;font-size:10px;font-weight:bold;text-align:center;padding:3px;margin-bottom:6px}
+.tp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.tp-row label{font-size:10px;font-weight:bold;color:#333}
+.tp-lamp{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f66,#900);border:1px solid #555}
+.tp-lamp.grn{background:radial-gradient(circle at 35% 35%,#6f6,#060)}
+.tp-bottom{margin-top:10px;display:flex;gap:10px;justify-content:center}
+.tp-btn{padding:6px 14px;font-size:11px;font-weight:bold;border:2px solid #555;background:#ddd;cursor:pointer}
+.tp-btn.red-btn{background:#c00;color:#fff;border-color:#900}
+.tp-btn.grn-btn{background:#060;color:#fff;border-color:#030}
+</style>
 </head>
 <body>
+<div id="app">
 
-<!-- ══ Navigation Bar ══ -->
-<nav class="navbar">
-  <h1>EPGS TEST RIG</h1>
-  <button class="nav-btn ctrl">&#9654; TEST START</button>
-  <button class="nav-btn stop">&#9632; TEST STOP</button>
-  <button class="nav-btn">TEST CONFIG</button>
-  <button class="nav-btn">S/M PARAMETERS</button>
-  <button class="nav-btn active">MIMIC SCREEN</button>
-  <button class="nav-btn">TREND GRAPH</button>
-  <button class="nav-btn">LRU PARAMETERS</button>
-  <button class="nav-btn">GEARBOX PARAMS</button>
-  <button class="nav-btn">REPORT</button>
-  <button class="nav-btn">MODES</button>
-  <button class="nav-btn">LRU TESTS</button>
-  <div class="clock" id="clock">--:--:--</div>
-</nav>
-
-<!-- ══ Main Grid ══ -->
-<div class="main">
-
-  <!-- ── Column 1: Drive Stands + Hydraulic ── -->
-  <div style="display:flex; flex-direction:column; gap:8px;">
-
-    <!-- MG Drive Stand 1 -->
-    <div class="card">
-      <div class="card-title">MG Drive Stand 1</div>
-      <div class="drive-stand">
-        <div class="ds-title">IDG — 40 kVA (AC)</div>
-        <div class="ds-row">
-          <div>
-            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">VFD</div>
-            <div class="motor-icon" id="motor1">AC<br>MTR</div>
-          </div>
-          <div class="arrow">→</div>
-          <div>
-            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">HS/LS</div>
-            <div style="width:36px;height:52px;border:2px solid #a0c4ff;background:#0d1b33;display:flex;align-items:center;justify-content:center;font-size:9px;color:#a0c4ff;font-weight:bold;">GEAR<br>BOX</div>
-          </div>
-          <div class="arrow">→</div>
-          <div>
-            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">IDG</div>
-            <div class="gen-icon">40<br>kVA</div>
-          </div>
-        </div>
-        <div class="ds-params" style="margin-top:8px;">
-          <div class="readout"><label>RPM</label><span class="val" id="rpm1">3600</span></div>
-          <div class="readout"><label>Torque (N·m)</label><span class="val" id="torq1">142.5</span></div>
-          <div class="readout"><label>LUB Oil Temp (°C)</label><span class="val warn" id="oil1">78.3</span></div>
-          <div class="readout"><label>Oil Pressure (BAR)</label><span class="val" id="pr1">4.2</span></div>
-          <div class="readout"><label>IDG Output (VRMS)</label><span class="val" id="vout1">115.0</span></div>
-          <div class="readout"><label>IDG Freq (Hz)</label><span class="val" id="freq1">400.0</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MG Drive Stand 2 -->
-    <div class="card">
-      <div class="card-title">MG Drive Stand 2</div>
-      <div class="drive-stand" style="border-color:#9b59b6;">
-        <div class="ds-title" style="color:#d7bde2;">DC GEN — 5 kW</div>
-        <div class="ds-row">
-          <div>
-            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">VFD</div>
-            <div class="motor-icon stopped">AC<br>MTR</div>
-          </div>
-          <div class="arrow" style="color:#9b59b6;">→</div>
-          <div>
-            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">HS/LS</div>
-            <div style="width:36px;height:52px;border:2px solid #9b59b6;background:#0d1b33;display:flex;align-items:center;justify-content:center;font-size:9px;color:#9b59b6;font-weight:bold;">GEAR<br>BOX</div>
-          </div>
-          <div class="arrow" style="color:#9b59b6;">→</div>
-          <div>
-            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">DC GEN</div>
-            <div class="gen-icon" style="border-color:#9b59b6;color:#d7bde2;">5<br>kW</div>
-          </div>
-        </div>
-        <div class="ds-params" style="margin-top:8px;">
-          <div class="readout"><label>RPM</label><span class="val grey" id="rpm2">0</span></div>
-          <div class="readout"><label>DC Voltage (V)</label><span class="val grey" id="vdc">0.0</span></div>
-          <div class="readout"><label>DC Current (A)</label><span class="val grey" id="idc">0.0</span></div>
-          <div class="readout"><label>Body Temp (°C)</label><span class="val grey" id="temp2">24.1</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Hydraulic System -->
-    <div class="card">
-      <div class="card-title">Hydraulic System</div>
-      <div class="readout"><label>Power Pack</label><span class="val">ON</span></div>
-      <div class="readout"><label>Inlet Pressure (BAR)</label><span class="val" id="hyd-in">280</span></div>
-      <div class="readout"><label>Flow (lpm)</label><span class="val" id="hyd-flow">22.4</span></div>
-      <div class="readout"><label>Outlet Temp (°C)</label><span class="val" id="hyd-temp">52.1</span></div>
-      <div style="margin-top:4px;font-size:10px;color:#8ab4f8;">Pressure</div>
-      <div class="hyd-bar"><div class="hyd-fill" id="hyd-fill" style="width:93%;"></div></div>
-    </div>
-
+<!-- HEADER -->
+<div id="hdr" style="position:relative">
+  <div class="cabs-logo"><span>DRDO<br>CABS</span></div>
+  <h1>EPGS TEST SCREEN</h1>
+  <div class="hdr-right">
+    <div id="datetime">05-02-2026 15:54</div>
+    <div class="dyna-logo">S</div>
   </div>
-
-  <!-- ── Column 2: Centre — LRU Rack + HMDG Bench ── -->
-  <div style="display:flex; flex-direction:column; gap:8px;">
-
-    <!-- LRU Rack -->
-    <div class="card">
-      <div class="card-title">LRU Rack</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-
-        <div>
-          <div class="lru-rack">
-            <div class="lru-item">
-              <span class="lru-name">GCU 1</span>
-              <span class="lru-status"><span class="led green"></span>ONLINE</span>
-            </div>
-            <div class="lru-item">
-              <span class="lru-name">GCU 2</span>
-              <span class="lru-status"><span class="led grey"></span>STANDBY</span>
-            </div>
-            <div class="lru-item">
-              <span class="lru-name">ACPMU</span>
-              <span class="lru-status"><span class="led green"></span>ONLINE</span>
-            </div>
-            <div class="lru-item">
-              <span class="lru-name">DCPMU</span>
-              <span class="lru-status"><span class="led green"></span>ONLINE</span>
-            </div>
-            <div class="lru-item">
-              <span class="lru-name">TRU 1</span>
-              <span class="lru-status"><span class="led green"></span>ONLINE</span>
-            </div>
-            <div class="lru-item">
-              <span class="lru-name">TRU 2</span>
-              <span class="lru-status"><span class="led green"></span>ONLINE</span>
-            </div>
-            <div class="lru-item">
-              <span class="lru-name">GPPU</span>
-              <span class="lru-status"><span class="led yellow"></span>STBY</span>
-            </div>
-            <div class="lru-item">
-              <span class="lru-name">CRU 1</span>
-              <span class="lru-status"><span class="led green"></span>ONLINE</span>
-            </div>
-            <div class="lru-item">
-              <span class="lru-name">CRU 2</span>
-              <span class="lru-status"><span class="led green"></span>ONLINE</span>
-            </div>
-            <div class="lru-item">
-              <span class="lru-name">BATTERY</span>
-              <span class="lru-status"><span class="led green"></span>94% SOC</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Contactor / Bus status -->
-        <div>
-          <div style="font-size:10px;color:#ffd166;margin-bottom:6px;font-weight:bold;">BUS / CONTACTOR STATUS</div>
-          <table style="width:100%;font-size:10px;border-collapse:collapse;">
-            <tr><td style="color:#8ab4f8;padding:2px 0;">GPC-1</td><td><span class="contactor"></span>CLOSED</td></tr>
-            <tr><td style="color:#8ab4f8;padding:2px 0;">GLC-1</td><td><span class="contactor"></span>CLOSED</td></tr>
-            <tr><td style="color:#8ab4f8;padding:2px 0;">GLC-2</td><td><span class="contactor open"></span><span style="color:#555;">OPEN</span></td></tr>
-            <tr><td style="color:#8ab4f8;padding:2px 0;">AC-BTC</td><td><span class="contactor"></span>CLOSED</td></tr>
-            <tr><td style="color:#8ab4f8;padding:2px 0;">GPC-2</td><td><span class="contactor open"></span><span style="color:#555;">OPEN</span></td></tr>
-            <tr><td style="color:#8ab4f8;padding:2px 0;">TLC-1</td><td><span class="contactor"></span>CLOSED</td></tr>
-            <tr><td style="color:#8ab4f8;padding:2px 0;">TLC-2</td><td><span class="contactor"></span>CLOSED</td></tr>
-            <tr><td style="color:#8ab4f8;padding:2px 0;">DC-BTC</td><td><span class="contactor"></span>CLOSED</td></tr>
-            <tr><td style="color:#8ab4f8;padding:2px 0;">BC (BATT)</td><td><span class="contactor"></span>CLOSED</td></tr>
-            <tr><td style="color:#8ab4f8;padding:2px 0;">EMDP-CC</td><td><span class="contactor open"></span><span style="color:#555;">OPEN</span></td></tr>
-          </table>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- HMDG Test Bench -->
-    <div class="card">
-      <div class="card-title">HMDG Test Bench</div>
-      <div class="hmdg-row">
-        <div class="hmdg-unit">
-          <span class="hu-label">HMDG 1<br>5 kVA</span>
-          <div class="hmdg-circle">5kVA</div>
-          <div class="readout" style="justify-content:center;"><span class="led green"></span></div>
-          <div class="readout"><label>V (VRMS)</label><span class="val" style="min-width:50px;font-size:11px;" id="hmdg1v">115.0</span></div>
-          <div class="readout"><label>Hz</label><span class="val" style="min-width:50px;font-size:11px;" id="hmdg1f">400.0</span></div>
-        </div>
-        <div class="hmdg-unit">
-          <span class="hu-label">HMDG 2<br>400 W</span>
-          <div class="hmdg-circle">400W</div>
-          <div class="readout" style="justify-content:center;"><span class="led green"></span></div>
-          <div class="readout"><label>V (VRMS)</label><span class="val" style="min-width:50px;font-size:11px;" id="hmdg2v">115.2</span></div>
-          <div class="readout"><label>Hz</label><span class="val" style="min-width:50px;font-size:11px;" id="hmdg2f">400.1</span></div>
-        </div>
-        <div class="hmdg-unit">
-          <span class="hu-label">HMDG 3<br>350 W</span>
-          <div class="hmdg-circle">350W</div>
-          <div class="readout" style="justify-content:center;"><span class="led yellow"></span></div>
-          <div class="readout"><label>V (VRMS)</label><span class="val warn" style="min-width:50px;font-size:11px;" id="hmdg3v">112.8</span></div>
-          <div class="readout"><label>Hz</label><span class="val warn" style="min-width:50px;font-size:11px;" id="hmdg3f">398.4</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Fault log -->
-    <div class="card">
-      <div class="card-title">Fault / Event Log</div>
-      <table class="fault-table">
-        <thead>
-          <tr><th>Time</th><th>LRU</th><th>Parameter</th><th>Status</th></tr>
-        </thead>
-        <tbody id="fault-log">
-          <tr><td>09:14:32</td><td>GCU-1</td><td>IDG_LUB_OIL_TEMP</td><td class="warn">WARN 78.3°C</td></tr>
-          <tr><td>09:10:05</td><td>HMDG-3</td><td>HMDG_STATUS</td><td class="warn">VOLT LOW 112.8V</td></tr>
-          <tr><td>09:00:00</td><td>SYS</td><td>TEST_START</td><td class="ok">OK</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-  </div>
-
-  <!-- ── Column 3: Load Banks + SFC ── -->
-  <div style="display:flex; flex-direction:column; gap:8px;">
-
-    <!-- AC Load Bank -->
-    <div class="card">
-      <div class="card-title">AC Load Bank</div>
-      <div class="load-bank">
-        <div class="load-cell"><span class="lc-label">L1(V)</span><span class="lc-val" id="acl1v">114.9</span></div>
-        <div class="load-cell"><span class="lc-label">L2(V)</span><span class="lc-val" id="acl2v">115.1</span></div>
-        <div class="load-cell"><span class="lc-label">L3(V)</span><span class="lc-val" id="acl3v">115.0</span></div>
-        <div class="load-cell"><span class="lc-label">L1(A)</span><span class="lc-val" id="acl1a">38.2</span></div>
-        <div class="load-cell"><span class="lc-label">L2(A)</span><span class="lc-val" id="acl2a">37.9</span></div>
-        <div class="load-cell"><span class="lc-label">L3(A)</span><span class="lc-val" id="acl3a">38.5</span></div>
-        <div class="load-cell"><span class="lc-label">L1(PF)</span><span class="lc-val">0.85</span></div>
-        <div class="load-cell"><span class="lc-label">L2(PF)</span><span class="lc-val">0.85</span></div>
-        <div class="load-cell"><span class="lc-label">L3(PF)</span><span class="lc-val">0.85</span></div>
-      </div>
-    </div>
-
-    <!-- DC Load Bank -->
-    <div class="card">
-      <div class="card-title">DC Load Bank — I(A)</div>
-      <div class="load-bank">
-        <div class="load-cell"><span class="lc-label">TRU1-I</span><span class="lc-val" id="tru1i">88.4</span></div>
-        <div class="load-cell"><span class="lc-label">TRU1-V</span><span class="lc-val" id="tru1v">28.0</span></div>
-        <div class="load-cell"><span class="lc-label">TRU1-T</span><span class="lc-val" id="tru1t">62°C</span></div>
-        <div class="load-cell"><span class="lc-label">TRU2-I</span><span class="lc-val" id="tru2i">91.2</span></div>
-        <div class="load-cell"><span class="lc-label">TRU2-V</span><span class="lc-val" id="tru2v">27.9</span></div>
-        <div class="load-cell"><span class="lc-label">TRU2-T</span><span class="lc-val" id="tru2t">64°C</span></div>
-        <div class="load-cell"><span class="lc-label">EMG-V</span><span class="lc-val" id="emgv">27.8</span></div>
-        <div class="load-cell"><span class="lc-label">GPU-V</span><span class="lc-val">0.0</span></div>
-        <div class="load-cell"><span class="lc-label">BATT-V</span><span class="lc-val">29.1</span></div>
-      </div>
-    </div>
-
-    <!-- SFC / Phase sequence -->
-    <div class="card">
-      <div class="card-title">SFC — Phase Sequence</div>
-      <div class="sfc-row"><span class="sfc-phase">L1 (V)</span><span class="val" style="background:#000;border:1px solid #0f3460;color:#00ff88;padding:1px 6px;font-size:12px;">114.9</span></div>
-      <div class="sfc-row" style="margin-top:4px;"><span class="sfc-phase">L2 (V)</span><span class="val" style="background:#000;border:1px solid #0f3460;color:#00ff88;padding:1px 6px;font-size:12px;">115.1</span></div>
-      <div class="sfc-row" style="margin-top:4px;"><span class="sfc-phase">L3 (V)</span><span class="val" style="background:#000;border:1px solid #0f3460;color:#00ff88;padding:1px 6px;font-size:12px;">115.0</span></div>
-      <div class="sfc-row" style="margin-top:4px;"><span class="sfc-phase">FREQ (Hz)</span><span class="val" style="background:#000;border:1px solid #0f3460;color:#00ff88;padding:1px 6px;font-size:12px;">400.0</span></div>
-      <div style="margin-top:8px;font-size:10px;color:#8ab4f8;">Phase Sequence</div>
-      <div style="margin-top:4px;font-size:13px;color:#52b788;font-weight:bold;">L1 → L2 → L3 ✓</div>
-    </div>
-
-    <!-- GCU Parameters quick view -->
-    <div class="card">
-      <div class="card-title">GCU-1 Parameters</div>
-      <div class="readout"><label>IDG_LUB_OIL_TEMP</label><span class="val warn">78.3°C</span></div>
-      <div class="readout"><label>IDG_LUB_OIL_EXC</label><span class="val">0.0°C</span></div>
-      <div class="readout"><label>INIT_BIT_GCU_1</label><span class="val">0.0</span></div>
-      <div class="readout"><label>BKUP_POWER_ON</label><span class="val fault">FALSE</span></div>
-      <div class="readout"><label>IDG_FAULT</label><span class="val ok">FALSE</span></div>
-      <div class="readout"><label>ALT1_SRD_FAULT</label><span class="val ok">FALSE</span></div>
-      <div class="readout"><label>ALT1_FEEDER_FAULT</label><span class="val ok">FALSE</span></div>
-      <div class="readout"><label>GCU_1_FAULT</label><span class="val ok">FALSE</span></div>
-    </div>
-
-  </div>
-
-  <!-- ── Status Bar ── -->
-  <div class="statusbar span3">
-    <div class="sb-item"><span class="led green"></span><span class="sb-label">MODE:</span><span class="sb-val">NORMAL OPERATION</span></div>
-    <div class="sb-item"><span class="sb-label">TEST ID:</span><span class="sb-val">EPGS-2026-005</span></div>
-    <div class="sb-item"><span class="sb-label">ELAPSED:</span><span class="sb-val" id="elapsed">00:14:32</span></div>
-    <div class="sb-item"><span class="sb-label">ACPMU RS422:</span><span class="sb-val">OK</span></div>
-    <div class="sb-item"><span class="sb-label">DCPMU RS422:</span><span class="sb-val">OK</span></div>
-    <div class="sb-item"><span class="sb-label">ARINC-429:</span><span class="sb-val">OK</span></div>
-    <div class="sb-item"><span class="sb-label">ACTIVE FAULTS:</span><span class="sb-val warn">2</span></div>
-    <div class="sb-item" style="margin-left:auto;"><span class="sb-label">CABS / DRDO — EPGS TEST RIG v1.0</span></div>
-  </div>
-
 </div>
 
+<!-- TABS + LAMPS -->
+<div id="tabs">
+  <button class="tab" onclick="showParam('alt1')">ALT 1<br>PARAMETERS</button>
+  <button class="tab" onclick="showParam('alt2')">ALT 2<br>PARAMETERS</button>
+  <button class="tab" onclick="showParam('tru')">TRU<br>PARAMETERS</button>
+  <button class="tab" onclick="showParam('gcu1')">GCU-1<br>PARAMETERS</button>
+  <button class="tab" onclick="showParam('gcu2')">GCU-2<br>PARAMETERS</button>
+  <button class="tab" onclick="showParam('gppu')">GPPU<br>PARAMETERS</button>
+  <button class="tab" onclick="showParam('hmdg')">HMDG<br>PARAMETERS</button>
+  <button class="tab" onclick="showParam('batt')">BATTERY<br>PARAMETERS</button>
+  <button class="tab" onclick="showParam('cru')">CRU<br>PARAMETERS</button>
+  <div class="lamps">
+    <div class="lamp-grp"><span>FAULT</span><div class="lamp off" id="lamp-fault"></div></div>
+    <div class="lamp-grp"><span>IDLE</span><div class="lamp ylw" id="lamp-idle"></div></div>
+    <div class="lamp-grp"><span>RUNNING</span><div class="lamp grn" id="lamp-run"></div></div>
+  </div>
+</div>
+
+<!-- MAIN AREA -->
+<div id="main-area">
+
+  <!-- SCREEN 1: Power Schematic -->
+  <div class="screen active" id="scr-main">
+    <!-- Navigation to other screens -->
+    <div id="nav">
+      <button class="nav-btn" onclick="showScreen('scr-main')">SCHEMATIC</button>
+      <button class="nav-btn" onclick="showScreen('scr-ctrl')">CONTROL PANEL</button>
+      <button class="nav-btn" onclick="showScreen('scr-tp')">TEST PANEL</button>
+    </div>
+
+    <!-- Mode selector -->
+    <div id="mode-sel">
+      <label>MODE / SCENARIO</label>
+      <select id="mode-select" onchange="applyMode(this.value)">
+        <option value="normal">Normal Operation</option>
+        <option value="tru1fail">TRU 1 Failure</option>
+        <option value="alt1fail">ALT 1 Failure</option>
+        <option value="tru12fail">TRU 1 &amp; 2 Failure</option>
+        <option value="alt12fail">ALT 1 &amp; 2 Failure</option>
+        <option value="alt12genfail">ALT 1, 2 &amp; GEN Failure</option>
+        <option value="acgpu">ACGPU Operation</option>
+        <option value="dcgpu">DCGPU Operation</option>
+        <option value="emdp">EMDP Operation</option>
+      </select>
+    </div>
+
+    <!-- Parameter overlays -->
+    <div class="pov" id="pov-alt1">
+      <h3>ALT1 PARAMETERS</h3>
+      <div class="pr"><label>ALT1 SPEED (Rpm)</label><span class="pv" id="a1rpm">0.0</span></div>
+      <div class="pr"><label>OUTPUT FREQUENCY (Hz)</label><span class="pv" id="a1freq">0.0</span></div>
+      <div class="pr"><label>OIL INLET TEMP (°C)</label><span class="pv" id="a1oilin">0.0</span></div>
+      <div class="pr"><label>OIL OUTLET TEMP (°C)</label><span class="pv" id="a1oilout">0.0</span></div>
+      <div class="pr"><label>FLOW (Lpm)</label><span class="pv" id="a1flow">0.0</span></div>
+      <div class="pr"><label>INPUT PRESSURE (bar)</label><span class="pv" id="a1pr">0.0</span></div>
+      <div class="pr"><label>INPUT TORQUE (Nm)</label><span class="pv" id="a1torq">0.0</span></div>
+      <div class="pr"><label>PH-A VOLTAGE (V)</label><span class="pv" id="a1va">0.0</span></div>
+      <div class="pr"><label>PH-B VOLTAGE (V)</label><span class="pv" id="a1vb">0.0</span></div>
+      <div class="pr"><label>PH-C VOLTAGE (V)</label><span class="pv" id="a1vc">0.0</span></div>
+      <div style="text-align:right;margin-top:4px"><button onclick="closeParam()" style="font-size:10px;padding:2px 8px;cursor:pointer">CLOSE</button></div>
+    </div>
+    <div class="pov" id="pov-alt2">
+      <h3>ALT2 PARAMETERS</h3>
+      <div class="pr"><label>ALT2 SPEED (Rpm)</label><span class="pv" id="a2rpm">0.0</span></div>
+      <div class="pr"><label>OUTPUT FREQUENCY (Hz)</label><span class="pv" id="a2freq">0.0</span></div>
+      <div class="pr"><label>OIL INLET TEMP (°C)</label><span class="pv" id="a2oilin">0.0</span></div>
+      <div class="pr"><label>OIL OUTLET TEMP (°C)</label><span class="pv" id="a2oilout">0.0</span></div>
+      <div class="pr"><label>FLOW (Lpm)</label><span class="pv" id="a2flow">0.0</span></div>
+      <div class="pr"><label>INPUT PRESSURE (bar)</label><span class="pv" id="a2pr">0.0</span></div>
+      <div class="pr"><label>INPUT TORQUE (Nm)</label><span class="pv" id="a2torq">0.0</span></div>
+      <div class="pr"><label>PH-A VOLTAGE (V)</label><span class="pv" id="a2va">0.0</span></div>
+      <div class="pr"><label>PH-B VOLTAGE (V)</label><span class="pv" id="a2vb">0.0</span></div>
+      <div class="pr"><label>PH-C VOLTAGE (V)</label><span class="pv" id="a2vc">0.0</span></div>
+      <div style="text-align:right;margin-top:4px"><button onclick="closeParam()" style="font-size:10px;padding:2px 8px;cursor:pointer">CLOSE</button></div>
+    </div>
+    <div class="pov" id="pov-gcu1">
+      <h3>GCU-1 PARAMETERS</h3>
+      <div class="pr"><label>IDG_LUB_OIL_TEMP</label><span class="pv">0.0 °C</span></div>
+      <div class="pr"><label>IDG_LUB_OIL_EXC</label><span class="pv">0.0 °C</span></div>
+      <div class="pr"><label>INIT_BIT_GCU_1</label><span class="pv">0.0</span></div>
+      <div class="pr"><label>BKUP_POWER_ON</label><span class="pv">FALSE</span></div>
+      <div class="pr"><label>IDG_FAULT</label><span class="pv">FALSE</span></div>
+      <div class="pr"><label>ALT1_SRD_FAULT</label><span class="pv">FALSE</span></div>
+      <div class="pr"><label>ALT_1_FEEDER_FAULT</label><span class="pv">FALSE</span></div>
+      <div class="pr"><label>GCU_1_FAULT</label><span class="pv">FALSE</span></div>
+      <div style="text-align:right;margin-top:4px"><button onclick="closeParam()" style="font-size:10px;padding:2px 8px;cursor:pointer">CLOSE</button></div>
+    </div>
+    <div class="pov" id="pov-gcu2">
+      <h3>GCU-2 PARAMETERS</h3>
+      <div class="pr"><label>INIT_BIT_GCU_2</label><span class="pv">0.0</span></div>
+      <div class="pr"><label>GCU_2_SYS_SHUTDOWN</label><span class="pv">FALSE</span></div>
+      <div class="pr"><label>GCU_2_BIT_OK</label><span class="pv">TRUE</span></div>
+      <div class="pr"><label>START/STOP HMDG</label><span class="pv">FALSE</span></div>
+      <div class="pr"><label>ALT2 VOLTAGE A (V)</label><span class="pv">115.0</span></div>
+      <div class="pr"><label>ALT2 CURRENT A (A)</label><span class="pv">12.4</span></div>
+      <div class="pr"><label>ALT2 FREQUENCY (Hz)</label><span class="pv">400.0</span></div>
+      <div class="pr"><label>GCU_2_BODY TEMP</label><span class="pv">42.1 °C</span></div>
+      <div style="text-align:right;margin-top:4px"><button onclick="closeParam()" style="font-size:10px;padding:2px 8px;cursor:pointer">CLOSE</button></div>
+    </div>
+    <div class="pov" id="pov-tru">
+      <h3>TRU PARAMETERS</h3>
+      <div class="pr"><label>TRU-1 VOLTAGE (V)</label><span class="pv">27.9</span></div>
+      <div class="pr"><label>TRU-1 TEMP (°C)</label><span class="pv">62.0</span></div>
+      <div class="pr"><label>TRU-2 VOLTAGE (V)</label><span class="pv">28.1</span></div>
+      <div class="pr"><label>TRU-2 TEMP (°C)</label><span class="pv">64.3</span></div>
+      <div class="pr"><label>TRU1_CS (V)</label><span class="pv">1.24</span></div>
+      <div class="pr"><label>TRU2_CS (V)</label><span class="pv">1.28</span></div>
+      <div style="text-align:right;margin-top:4px"><button onclick="closeParam()" style="font-size:10px;padding:2px 8px;cursor:pointer">CLOSE</button></div>
+    </div>
+    <div class="pov" id="pov-gppu">
+      <h3>GPPU PARAMETERS</h3>
+      <div class="pr"><label>GPU VOLTAGE A (VRMS)</label><span class="pv">0.0</span></div>
+      <div class="pr"><label>GPU VOLTAGE B (VRMS)</label><span class="pv">0.0</span></div>
+      <div class="pr"><label>GPU VOLTAGE C (VRMS)</label><span class="pv">0.0</span></div>
+      <div class="pr"><label>GPU CURRENT A (A)</label><span class="pv">0.0</span></div>
+      <div class="pr"><label>GPU CURRENT B (A)</label><span class="pv">0.0</span></div>
+      <div class="pr"><label>GPU CURRENT C (A)</label><span class="pv">0.0</span></div>
+      <div class="pr"><label>GPU PHASE SEQUENCE</label><span class="pv">ABC</span></div>
+      <div style="text-align:right;margin-top:4px"><button onclick="closeParam()" style="font-size:10px;padding:2px 8px;cursor:pointer">CLOSE</button></div>
+    </div>
+    <div class="pov" id="pov-hmdg">
+      <h3>HMDG PARAMETERS</h3>
+      <div class="pr"><label>HMDG1 VOLTAGE A (VRMS)</label><span class="pv">115.0</span></div>
+      <div class="pr"><label>HMDG1 FLOW (Lpm)</label><span class="pv">8.4</span></div>
+      <div class="pr"><label>HMDG1 PRESSURE (bar)</label><span class="pv">240</span></div>
+      <div class="pr"><label>HMDG1 FREQ (Hz)</label><span class="pv">400.0</span></div>
+      <div class="pr"><label>HMDG1 STATUS</label><span class="pv">TRUE</span></div>
+      <div class="pr"><label>HMDG2 VOLTAGE A (VRMS)</label><span class="pv">115.1</span></div>
+      <div class="pr"><label>HMDG2 FLOW (Lpm)</label><span class="pv">7.9</span></div>
+      <div class="pr"><label>HMDG2 STATUS</label><span class="pv">TRUE</span></div>
+      <div style="text-align:right;margin-top:4px"><button onclick="closeParam()" style="font-size:10px;padding:2px 8px;cursor:pointer">CLOSE</button></div>
+    </div>
+    <div class="pov" id="pov-batt">
+      <h3>BATTERY PARAMETERS</h3>
+      <div class="pr"><label>DC VOLTAGE (V)</label><span class="pv">29.1</span></div>
+      <div class="pr"><label>DC CURRENT (A)</label><span class="pv">4.2</span></div>
+      <div class="pr"><label>STATE OF CHARGE (%)</label><span class="pv">94</span></div>
+      <div class="pr"><label>TEMPERATURE (°C)</label><span class="pv">28.4</span></div>
+      <div class="pr"><label>DELIVERABLE ENERGY</label><span class="pv">47.2 Ah</span></div>
+      <div class="pr"><label>CAPACITY</label><span class="pv">50 Ah</span></div>
+      <div class="pr"><label>FAULT STATUS</label><span class="pv">FALSE</span></div>
+      <div style="text-align:right;margin-top:4px"><button onclick="closeParam()" style="font-size:10px;padding:2px 8px;cursor:pointer">CLOSE</button></div>
+    </div>
+    <div class="pov" id="pov-cru">
+      <h3>CRU PARAMETERS</h3>
+      <div class="pr"><label>CRU-1 OUTPUT (V)</label><span class="pv">28.0</span></div>
+      <div class="pr"><label>CRU-1 CURRENT (A)</label><span class="pv">14.3</span></div>
+      <div class="pr"><label>CRU-1 STATUS</label><span class="pv">OK</span></div>
+      <div class="pr"><label>CRU-2 OUTPUT (V)</label><span class="pv">27.9</span></div>
+      <div class="pr"><label>CRU-2 CURRENT (A)</label><span class="pv">14.1</span></div>
+      <div class="pr"><label>CRU-2 STATUS</label><span class="pv">OK</span></div>
+      <div style="text-align:right;margin-top:4px"><button onclick="closeParam()" style="font-size:10px;padding:2px 8px;cursor:pointer">CLOSE</button></div>
+    </div>
+
+    <!-- THE POWER DIAGRAM SVG -->
+    <svg id="diagram" width="1440" height="672" style="display:block">
+      <defs>
+        <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#27ae60"/>
+        </marker>
+      </defs>
+
+      <!-- White background -->
+      <rect width="1440" height="672" fill="#fff"/>
+
+      <!-- ═══ AC BUS BAR ═══ (grey band y=255 to 325) -->
+      <rect x="92" y="255" width="970" height="70" fill="#d5d8dc" stroke="#aaa" stroke-width="1"/>
+      <!-- ACPMU label -->
+      <text x="577" y="278" text-anchor="middle" font-size="18" font-weight="bold" fill="#1a252f">ACPMU</text>
+      <!-- Bus labels -->
+      <text x="310" y="310" text-anchor="middle" font-size="11" fill="#555">AC MAIN</text>
+      <text x="790" y="310" text-anchor="middle" font-size="11" fill="#555">AC ESSENTIAL</text>
+
+      <!-- ═══ DC BUS BAR ═══ (grey band y=460 to 530) -->
+      <rect x="92" y="460" width="970" height="70" fill="#d5d8dc" stroke="#aaa" stroke-width="1"/>
+      <text x="270" y="500" text-anchor="middle" font-size="11" fill="#555">DC MAIN</text>
+      <text x="490" y="500" text-anchor="middle" font-size="11" fill="#555">DC ESSENTIAL</text>
+      <text x="660" y="500" text-anchor="middle" font-size="11" fill="#555">DC EMG</text>
+
+      <!-- ═══ ORANGE CURRENT TRANSFORMERS (above TRUs) ═══ -->
+      <rect x="185" y="332" width="80" height="20" fill="#e67e22" rx="2"/>
+      <rect x="800" y="332" width="80" height="20" fill="#e67e22" rx="2"/>
+      <rect x="900" y="332" width="55" height="20" fill="#e67e22" rx="2"/>
+
+      <!-- ──────────── WIRES (colored by mode) ──────────── -->
+
+      <!-- W1: ALT1 circle feed down to ALTCONT1 -->
+      <line id="w-alt1a" x1="228" y1="186" x2="228" y2="225" stroke="#27ae60" stroke-width="3"/>
+      <!-- W2: ALT1 ALTCONT1 to GCP1 junction (vertical) -->
+      <line id="w-alt1b" x1="228" y1="248" x2="228" y2="260" stroke="#27ae60" stroke-width="3"/>
+      <!-- W3: ALT1 vertical into AC MAIN bus -->
+      <line id="w-alt1c" x1="228" y1="260" x2="228" y2="325" stroke="#27ae60" stroke-width="3"/>
+      <!-- W4: GCP1 horizontal (GPPU → GCP1) -->
+      <line id="w-gcp1h" x1="92" y1="290" x2="163" y2="290" stroke="#27ae60" stroke-width="3"/>
+      <!-- W5: GCP1 into AC bus -->
+      <line id="w-gcp1v" x1="163" y1="290" x2="163" y2="325" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W6: AC MAIN bus left horizontal wire (inside bus) -->
+      <line id="w-acmain" x1="92" y1="290" x2="578" y2="290" stroke="#27ae60" stroke-width="3"/>
+      <!-- W7: AC-BTC contactor vertical stub -->
+      <line id="w-acbtc" x1="578" y1="260" x2="578" y2="320" stroke="#27ae60" stroke-width="3"/>
+      <!-- W8: AC ESSENTIAL bus right horizontal -->
+      <line id="w-acess" x1="578" y1="290" x2="1062" y2="290" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W9: ALT2 down to ALTCONT2 -->
+      <line id="w-alt2a" x1="838" y1="186" x2="838" y2="225" stroke="#27ae60" stroke-width="3"/>
+      <!-- W10: ALT2 ALTCONT2 to GLC2 -->
+      <line id="w-alt2b" x1="838" y1="248" x2="838" y2="275" stroke="#27ae60" stroke-width="3"/>
+      <!-- W11: GLC2 into AC ESS bus -->
+      <line id="w-alt2c" x1="870" y1="280" x2="870" y2="325" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W12: DC GEN down to GLC3 area -->
+      <line id="w-dcgen" x1="1073" y1="196" x2="1073" y2="460" stroke="#000" stroke-width="3"/>
+
+      <!-- W13: TRU1 input (AC MAIN → TRU1) -->
+      <line id="w-tru1in" x1="228" y1="325" x2="228" y2="348" stroke="#27ae60" stroke-width="3"/>
+      <!-- W14: TRU1 output (TRU1 → DC bus) -->
+      <line id="w-tru1out" x1="228" y1="408" x2="228" y2="460" stroke="#27ae60" stroke-width="3"/>
+      <!-- W15: TLC1 from TRU1 output stub -->
+      <line id="w-tlc1" x1="228" y1="480" x2="228" y2="520" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W16: TRU2 input (AC ESS → TRU2) -->
+      <line id="w-tru2in" x1="838" y1="325" x2="838" y2="348" stroke="#27ae60" stroke-width="3"/>
+      <!-- W17: TRU2 output -->
+      <line id="w-tru2out" x1="838" y1="408" x2="838" y2="460" stroke="#27ae60" stroke-width="3"/>
+      <!-- W18: TLC2 stub -->
+      <line id="w-tlc2" x1="838" y1="480" x2="838" y2="520" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W19: DC MAIN bus left section -->
+      <line id="w-dcmain" x1="92" y1="495" x2="405" y2="495" stroke="#27ae60" stroke-width="3"/>
+      <!-- W20: DC-BTC contactor stub -->
+      <line id="w-dcbtc" x1="405" y1="465" x2="405" y2="525" stroke="#27ae60" stroke-width="3"/>
+      <!-- W21: DC ESSENTIAL -->
+      <line id="w-dcess" x1="405" y1="495" x2="575" y2="495" stroke="#27ae60" stroke-width="3"/>
+      <!-- W22: DC-EMG contactor stub -->
+      <line id="w-dcemg" x1="575" y1="465" x2="575" y2="525" stroke="#27ae60" stroke-width="3"/>
+      <!-- W23: DC EMG bus -->
+      <line id="w-dcemgbus" x1="575" y1="495" x2="1062" y2="495" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W24: GCP2 left (GPPU2 → GCP2) -->
+      <line id="w-gcp2h" x1="92" y1="510" x2="130" y2="510" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W25: GLC3 stub -->
+      <line id="w-glc3" x1="1003" y1="465" x2="1003" y2="525" stroke="#27ae60" stroke-width="3"/>
+      <!-- W26: BC stub -->
+      <line id="w-bc" x1="1148" y1="465" x2="1148" y2="525" stroke="#27ae60" stroke-width="3"/>
+      <!-- W27: GLC3 → BC horizontal (battery feed) -->
+      <line id="w-battfeed" x1="1003" y1="495" x2="1290" y2="495" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W28: HMDG1 → CRU1 -->
+      <line id="w-hmdg1" x1="63" y1="590" x2="208" y2="590" stroke="#27ae60" stroke-width="3"/>
+      <!-- W29: CRU1 up to DC MAIN bus -->
+      <line id="w-cru1" x1="232" y1="570" x2="232" y2="530" stroke="#27ae60" stroke-width="3"/>
+      <!-- W30: ICFS1 line down from CRU1 -->
+      <line id="w-icfs1" x1="232" y1="608" x2="232" y2="640" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W31: HMDG2 → CRU2 -->
+      <line id="w-hmdg2" x1="608" y1="590" x2="760" y2="590" stroke="#27ae60" stroke-width="3"/>
+      <!-- W32: CRU2 up to DC bus -->
+      <line id="w-cru2" x1="830" y1="570" x2="830" y2="530" stroke="#27ae60" stroke-width="3"/>
+      <!-- W33: ICFS2 line -->
+      <line id="w-icfs2" x1="830" y1="608" x2="830" y2="640" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- W34: EMDP CONT down to EMDP -->
+      <line id="w-emdpcont" x1="1080" y1="525" x2="1080" y2="658" stroke="#27ae60" stroke-width="3"/>
+      <!-- W35: EMDP CHARGE CONT -->
+      <line id="w-emdpchg" x1="1183" y1="525" x2="1183" y2="590" stroke="#27ae60" stroke-width="3"/>
+      <!-- W36: Battery charge horizontal -->
+      <line id="w-battchg" x1="1148" y1="590" x2="1290" y2="590" stroke="#27ae60" stroke-width="3"/>
+
+      <!-- ──────────── COMPONENT SYMBOLS ──────────── -->
+
+      <!-- ALT 1 generator circle -->
+      <circle id="alt1-sym" cx="228" cy="158" r="28" fill="#27ae60" stroke="#1a252f" stroke-width="2"/>
+      <text x="228" y="155" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">ALT 1</text>
+      <text x="228" y="166" text-anchor="middle" font-size="8" fill="#fff">40kVA</text>
+
+      <!-- GCU 1 box -->
+      <rect x="158" y="190" width="70" height="35" fill="#ecf0f1" stroke="#7f8c8d" stroke-width="1.5" rx="2"/>
+      <text x="193" y="205" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50">GCU 1</text>
+      <!-- ALT CONT label -->
+      <text x="245" y="230" font-size="9" fill="#2c3e50">ALT</text>
+      <text x="245" y="240" font-size="9" fill="#2c3e50">CONT</text>
+
+      <!-- ALT 2 generator circle -->
+      <circle id="alt2-sym" cx="838" cy="158" r="28" fill="#27ae60" stroke="#1a252f" stroke-width="2"/>
+      <text x="838" y="155" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">ALT 2</text>
+      <text x="838" y="166" text-anchor="middle" font-size="8" fill="#fff">5kW</text>
+
+      <!-- GCU 2 box -->
+      <rect x="765" y="190" width="70" height="35" fill="#ecf0f1" stroke="#7f8c8d" stroke-width="1.5" rx="2"/>
+      <text x="800" y="205" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50">GCU 2</text>
+      <text x="858" y="230" font-size="9" fill="#2c3e50">ALT</text>
+      <text x="858" y="240" font-size="9" fill="#2c3e50">CONT</text>
+
+      <!-- DC GEN circle (grey) -->
+      <circle id="dcgen-sym" cx="1073" cy="168" r="28" fill="#95a5a6" stroke="#7f8c8d" stroke-width="2"/>
+      <text x="1073" y="163" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">DC</text>
+      <text x="1073" y="174" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">GEN</text>
+      <text x="1073" y="210" text-anchor="middle" font-size="9" fill="#2c3e50">DC GEN</text>
+
+      <!-- AC GCU box (left) -->
+      <rect id="acgcu-box" x="18" y="223" width="70" height="35" fill="#ecf0f1" stroke="#7f8c8d" stroke-width="1.5" rx="2"/>
+      <text x="53" y="244" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50">AC GCU</text>
+      <!-- AC GCU → GPPU link line -->
+      <line x1="53" y1="258" x2="53" y2="273" stroke="#7f8c8d" stroke-width="2"/>
+      <!-- GPPU upper (arrow shape) -->
+      <polygon id="gppu-top" points="18,273 88,273 88,305 53,312 18,305" fill="#ecf0f1" stroke="#7f8c8d" stroke-width="1.5"/>
+      <text x="53" y="294" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50">GPPU</text>
+      <!-- GPPU → GCP1 line -->
+      <line x1="88" y1="290" x2="163" y2="290" stroke="#7f8c8d" stroke-width="2"/>
+
+      <!-- DC GCU box (left, only shown in TRU1&2 fail) -->
+      <rect id="dcgcu-box" x="18" y="462" width="70" height="35" fill="#ecf0f1" stroke="#7f8c8d" stroke-width="1.5" rx="2" visibility="hidden"/>
+      <text id="dcgcu-txt" x="53" y="483" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50" visibility="hidden">DC GCU</text>
+      <!-- GPPU lower -->
+      <polygon id="gppu-bot" points="18,502 88,502 88,528 53,535 18,528" fill="#ecf0f1" stroke="#7f8c8d" stroke-width="1.5"/>
+      <text x="53" y="519" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50">GPPU</text>
+      <line x1="88" y1="510" x2="130" y2="510" stroke="#7f8c8d" stroke-width="2"/>
+
+      <!-- TRU 1 symbol (yellow with X) -->
+      <rect x="203" y="348" width="58" height="60" fill="#f1c40f" stroke="#c39b00" stroke-width="2"/>
+      <line x1="203" y1="348" x2="261" y2="408" stroke="#c39b00" stroke-width="2"/>
+      <line x1="261" y1="348" x2="203" y2="408" stroke="#c39b00" stroke-width="2"/>
+      <text x="232" y="427" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50">TRU 1</text>
+
+      <!-- TRU 2 symbol -->
+      <rect x="808" y="348" width="58" height="60" fill="#f1c40f" stroke="#c39b00" stroke-width="2"/>
+      <line x1="808" y1="348" x2="866" y2="408" stroke="#c39b00" stroke-width="2"/>
+      <line x1="866" y1="348" x2="808" y2="408" stroke="#c39b00" stroke-width="2"/>
+      <text x="837" y="427" text-anchor="middle" font-size="10" font-weight="bold" fill="#2c3e50">TRU 2</text>
+
+      <!-- CRU 1 box -->
+      <rect x="206" y="570" width="55" height="38" fill="#27ae60" stroke="#1a7a40" stroke-width="2" rx="2"/>
+      <text x="233" y="592" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">CRU 1</text>
+      <!-- CRU 2 box -->
+      <rect x="800" y="570" width="55" height="38" fill="#27ae60" stroke="#1a7a40" stroke-width="2" rx="2"/>
+      <text x="827" y="592" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">CRU 2</text>
+
+      <!-- ICFS labels -->
+      <text x="232" y="655" text-anchor="middle" font-size="9" fill="#2c3e50">ICFS-1</text>
+      <text x="830" y="655" text-anchor="middle" font-size="9" fill="#2c3e50">ICFS-2</text>
+
+      <!-- HMDG 1 circle -->
+      <circle cx="38" cy="590" r="30" fill="#27ae60" stroke="#1a7a40" stroke-width="2"/>
+      <text x="38" y="586" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">HMDG 1</text>
+      <text x="38" y="598" text-anchor="middle" font-size="8" fill="#fff">400W</text>
+
+      <!-- HMDG 2 circle -->
+      <circle cx="580" cy="590" r="30" fill="#27ae60" stroke="#1a7a40" stroke-width="2"/>
+      <text x="580" y="586" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">HMDG 2</text>
+      <text x="580" y="598" text-anchor="middle" font-size="8" fill="#fff">400W</text>
+
+      <!-- EMDP box -->
+      <ellipse cx="1080" cy="645" rx="32" ry="14" fill="#ecf0f1" stroke="#7f8c8d" stroke-width="1.5"/>
+      <text x="1080" y="649" text-anchor="middle" font-size="9" font-weight="bold" fill="#2c3e50">EMDP</text>
+      <text x="1080" y="545" text-anchor="middle" font-size="8" fill="#2c3e50">EMDP</text>
+      <text x="1080" y="554" text-anchor="middle" font-size="8" fill="#2c3e50">CONT</text>
+      <text x="1183" y="545" text-anchor="middle" font-size="8" fill="#2c3e50">EMDP CHG</text>
+      <text x="1183" y="554" text-anchor="middle" font-size="8" fill="#2c3e50">CONT</text>
+
+      <!-- Batteries -->
+      <rect x="1118" y="590" width="80" height="35" fill="#27ae60" stroke="#1a7a40" stroke-width="2" rx="2"/>
+      <text x="1158" y="602" text-anchor="middle" font-size="8" font-weight="bold" fill="#fff">50AH Lion</text>
+      <text x="1158" y="614" text-anchor="middle" font-size="8" font-weight="bold" fill="#fff">Battery</text>
+      <rect x="1210" y="590" width="80" height="35" fill="#27ae60" stroke="#1a7a40" stroke-width="2" rx="2"/>
+      <text x="1250" y="602" text-anchor="middle" font-size="8" font-weight="bold" fill="#fff">50AH Lion</text>
+      <text x="1250" y="614" text-anchor="middle" font-size="8" font-weight="bold" fill="#fff">Battery</text>
+
+      <!-- ──────────── CONTACTOR SYMBOLS (drawn on top of wires) ──────────── -->
+      <!-- Contactor helper: circle + short cross line (closed) -->
+      <!-- ALT CONT 1 -->
+      <circle cx="228" cy="236" r="11" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="220" y1="236" x2="236" y2="236" stroke="#2c3e50" stroke-width="2"/>
+      <!-- ALT CONT 2 -->
+      <circle cx="838" cy="236" r="11" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="830" y1="236" x2="846" y2="236" stroke="#2c3e50" stroke-width="2"/>
+      <!-- GCP 1 -->
+      <circle cx="163" cy="290" r="11" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="155" y1="290" x2="171" y2="290" stroke="#2c3e50" stroke-width="2"/>
+      <text x="140" y="283" text-anchor="middle" font-size="8" fill="#2c3e50">GCP 1</text>
+      <!-- GLC 2 -->
+      <circle cx="870" cy="280" r="11" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="862" y1="280" x2="878" y2="280" stroke="#2c3e50" stroke-width="2"/>
+      <text x="900" y="276" font-size="8" fill="#2c3e50">GLC 2</text>
+      <!-- AC-BTC -->
+      <circle cx="578" cy="289" r="12" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="566" y1="289" x2="590" y2="289" stroke="#2c3e50" stroke-width="2"/>
+      <text x="578" y="244" text-anchor="middle" font-size="9" fill="#2c3e50">AC-BTC</text>
+      <!-- GCP 2 -->
+      <circle cx="130" cy="510" r="11" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="122" y1="510" x2="138" y2="510" stroke="#2c3e50" stroke-width="2"/>
+      <text x="126" y="548" text-anchor="middle" font-size="8" fill="#2c3e50">GCP 2</text>
+      <!-- TLC 1 -->
+      <circle cx="228" cy="510" r="11" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="220" y1="510" x2="236" y2="510" stroke="#2c3e50" stroke-width="2"/>
+      <text x="228" y="548" text-anchor="middle" font-size="8" fill="#2c3e50">TLC 1</text>
+      <text x="248" y="472" font-size="8" fill="#555">DC MAIN</text>
+      <!-- DC-BTC -->
+      <circle cx="405" cy="495" r="12" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="393" y1="495" x2="417" y2="495" stroke="#2c3e50" stroke-width="2"/>
+      <text x="405" y="548" text-anchor="middle" font-size="8" fill="#2c3e50">DC-BTC</text>
+      <text x="450" y="472" font-size="8" fill="#555">DC ESSENTIAL</text>
+      <!-- DC-EMG -->
+      <circle cx="575" cy="495" r="12" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="563" y1="495" x2="587" y2="495" stroke="#2c3e50" stroke-width="2"/>
+      <text x="575" y="548" text-anchor="middle" font-size="8" fill="#2c3e50">DC-EMG</text>
+      <text x="620" y="472" font-size="8" fill="#555">DC EMG</text>
+      <!-- TLC 2 -->
+      <circle cx="838" cy="510" r="11" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="830" y1="510" x2="846" y2="510" stroke="#2c3e50" stroke-width="2"/>
+      <text x="838" y="548" text-anchor="middle" font-size="8" fill="#2c3e50">TLC 2</text>
+      <!-- GLC 3 -->
+      <circle cx="1003" cy="495" r="11" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="995" y1="495" x2="1011" y2="495" stroke="#2c3e50" stroke-width="2"/>
+      <text x="1003" y="548" text-anchor="middle" font-size="8" fill="#2c3e50">GLC 3</text>
+      <!-- BC -->
+      <circle cx="1148" cy="495" r="11" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="1140" y1="495" x2="1156" y2="495" stroke="#2c3e50" stroke-width="2"/>
+      <text x="1148" y="548" text-anchor="middle" font-size="8" fill="#2c3e50">BC</text>
+      <!-- EMDP CONT -->
+      <circle cx="1080" cy="535" r="10" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="1073" y1="535" x2="1087" y2="535" stroke="#2c3e50" stroke-width="2"/>
+      <!-- EMDP CHG CONT -->
+      <circle cx="1183" cy="558" r="10" fill="#fff" stroke="#2c3e50" stroke-width="2"/>
+      <line x1="1176" y1="558" x2="1190" y2="558" stroke="#2c3e50" stroke-width="2"/>
+
+      <!-- INTERRUPTION TIME display (hidden by default) -->
+      <g id="interr-time" visibility="hidden">
+        <rect x="1115" y="218" width="130" height="45" fill="#fff" stroke="#333" stroke-width="1"/>
+        <text x="1180" y="233" text-anchor="middle" font-size="9" fill="#333">INTERRUPTION TIME</text>
+        <rect x="1148" y="238" width="65" height="18" fill="#000" rx="2"/>
+        <text x="1180" y="251" text-anchor="middle" font-size="12" font-weight="bold" fill="#00ff00" font-family="'Courier New',monospace">0.0</text>
+      </g>
+
+    </svg><!-- end diagram SVG -->
+  </div><!-- end scr-main -->
+
+  <!-- SCREEN 2: EPGS CONTROL PANEL -->
+  <div class="screen" id="scr-ctrl">
+    <div style="background:#555;width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+      <button class="nav-btn" onclick="showScreen('scr-main')" style="align-self:flex-start;margin-left:10px;margin-top:8px">← BACK TO SCHEMATIC</button>
+      <div class="cp-outer">
+        <div class="cp-hdr">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:40px;height:40px;border-radius:50%;border:3px solid #fff;background:#1a6b9a;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:7px;font-weight:bold;text-align:center">DRDO<br>CABS</span></div>
+            <h2>EPGS CONTROL PANNEL</h2>
+          </div>
+          <div class="cp-dt" id="cp-dt">05-02-2026 15:46</div>
+          <button style="background:#c00;color:#fff;border:none;padding:4px 10px;font-weight:bold;font-size:11px;cursor:pointer">&#9673; QUIT</button>
+        </div>
+        <div class="cp-body">
+          <!-- Switches -->
+          <div class="cp-switches">
+            <div class="sw-item"><div class="sw-label">ACGPU SWITCH</div><div class="sw-body" onclick="toggleSw(this)"><span class="sw-on">ON</span><div class="sw-lever"></div><span class="sw-off">OFF</span></div></div>
+            <div class="sw-item"><div class="sw-label">AC SWITCH</div><div class="sw-body" onclick="toggleSw(this)"><span class="sw-on">ON</span><div class="sw-lever"></div><span class="sw-off">OFF</span></div></div>
+            <div class="sw-item"><div class="sw-label">DC SWITCH</div><div class="sw-body" onclick="toggleSw(this)"><span class="sw-on">ON</span><div class="sw-lever"></div><span class="sw-off">OFF</span></div></div>
+            <div class="sw-item"><div class="sw-label">CRU-1 RESET SWITCH</div><div class="sw-body" onclick="toggleSw(this)"><span class="sw-on">ON</span><div class="sw-lever"></div><span class="sw-off">OFF</span></div></div>
+            <div class="sw-item"><div class="sw-label">CRU-2 RESET SWITCH</div><div class="sw-body" onclick="toggleSw(this)"><span class="sw-on">ON</span><div class="sw-lever"></div><span class="sw-off">OFF</span></div></div>
+            <div class="sw-item"><div class="sw-label">DC GPU SWITCH</div><div class="sw-body" onclick="toggleSw(this)"><span class="sw-on">ON</span><div class="sw-lever"></div><span class="sw-off">OFF</span></div></div>
+            <div class="sw-item"><div class="sw-label">DC GPURESET SWITCH</div><div class="sw-body" onclick="toggleSw(this)"><span class="sw-on">ON</span><div class="sw-lever"></div><span class="sw-off">OFF</span></div></div>
+          </div>
+          <!-- Fault lamps -->
+          <div class="cp-faults">
+            <h4>FAULT INDICATORS</h4>
+            <div class="fl-grid">
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">ALT-1 FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">ALT-1 HOT</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">ALT-2 FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">GEN FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">TRU-1 FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">TRU-2 FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">TRU-1&2 FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">H2C1 FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">H1C2 FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">ALT-1&2 FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">BATT FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">BATT NOT CHARGING</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">EMDP BATT FAIL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">EMDP BATT NOT CHG</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">ELEC CRITICAL</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">ALT-2 OVERLOAD</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">GEN OVERLOAD</div></div>
+              <div class="fl-item"><div class="fl-lamp"></div><div class="fl-label">ALT-1 OVERLOAD</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: EPGS TEST PANEL -->
+  <div class="screen" id="scr-tp">
+    <div id="tp-screen" style="height:100%;overflow:auto">
+      <button class="nav-btn" onclick="showScreen('scr-main')" style="margin-bottom:8px">← BACK TO SCHEMATIC</button>
+      <div class="tp-hdr">EPGS TEST PANNEL</div>
+      <div class="tp-body">
+        <!-- ALT 1 -->
+        <div class="tp-col">
+          <h4>ALT 1 PARAMETERS</h4>
+          <div class="tp-row"><label>F-IDG LUB OIL TEMP HIGH</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>F-IDG LUB OIL TEMP LOW</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>F-IDG LUB OIL PR HIGH</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>F-IDG LUB OIL PR LOW</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>ALT-1-SEL</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>F-GCU1</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>SRD</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>I-BKUP</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>I-BIT1</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>GLC-1</label><div class="tp-lamp grn"></div></div>
+        </div>
+        <!-- ALT 2 -->
+        <div class="tp-col">
+          <h4>ALT 2 PARAMETERS</h4>
+          <div class="tp-row"><label>ALT-2-SEL</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>GLC-2</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>F-GCU2</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>F-CODE-5</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>F-CODE-4</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>F-CODE-3</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>F-CODE-2</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>F-CODE-1</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>F-CODE-0</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>BIT OK</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>I-BIT2</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>F-SYS</label><div class="tp-lamp"></div></div>
+        </div>
+        <!-- BUS STATUS -->
+        <div class="tp-col">
+          <h4>BUS / CONTACTOR STATUS</h4>
+          <div class="tp-row"><label>TRU-1 SEL</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>TLC-1 SEL</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>TRU-2 SEL</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>TLC-2 SEL</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>FTRU-1 OT</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>FTRU-2 OT</label><div class="tp-lamp"></div></div>
+          <div class="tp-row"><label>GPC</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>GLC-1</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>GLC-2</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>ACBTC</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>DCBTC</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>DC EMC</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>DCTP</label><div class="tp-lamp grn"></div></div>
+          <div class="tp-row"><label>DC</label><div class="tp-lamp grn"></div></div>
+        </div>
+      </div>
+      <div class="tp-bottom">
+        <button class="tp-btn grn-btn">ELECT EMG</button>
+        <button class="tp-btn grn-btn">BATT OK</button>
+        <button class="tp-btn grn-btn">ELECT SYS</button>
+        <div style="margin-left:20px;display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;font-weight:bold">TRU 1 SW</span>
+          <button class="tp-btn" style="font-size:10px;padding:4px 8px">OPEN</button>
+          <button class="tp-btn red-btn" style="font-size:10px;padding:4px 8px">FAULT</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;font-weight:bold">TRU 2 SW</span>
+          <button class="tp-btn" style="font-size:10px;padding:4px 8px">OPEN</button>
+          <button class="tp-btn red-btn" style="font-size:10px;padding:4px 8px">FAULT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main-area -->
+
+<!-- STATUS BAR -->
+<div id="sbar">
+  <div id="sbar-label">MACHINE STATUS</div>
+  <div id="sbar-msg" style="background:#27ae60"><span id="sbar-txt">NORMAL OPERATION</span></div>
+  <div id="sbar-ack">FAULT ACK &#9888;</div>
+</div>
+
+</div><!-- end app -->
+
 <script>
-  // ── Clock ──
-  function updateClock() {
-    const now = new Date();
-    document.getElementById('clock').textContent = now.toTimeString().slice(0, 8);
+// ─── CLOCK ───
+function tick(){
+  const n=new Date();
+  const s=d=>String(d).padStart(2,'0');
+  const ds=`${s(n.getDate())}-${s(n.getMonth()+1)}-${n.getFullYear()} ${s(n.getHours())}:${s(n.getMinutes())}`;
+  document.getElementById('datetime').textContent=ds;
+  document.getElementById('cp-dt').textContent=ds;
+}
+tick(); setInterval(tick,10000);
+
+// ─── SCREENS ───
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── PARAM OVERLAYS ───
+let openPov=null;
+function showParam(key){
+  closeParam();
+  const el=document.getElementById('pov-'+key);
+  if(el){el.classList.add('show');openPov=el;}
+  // highlight active tab
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  // Start live data if ALT1/ALT2
+  if(key==='alt1'||key==='alt2') startLiveParams(key);
+}
+function closeParam(){
+  if(openPov){openPov.classList.remove('show');openPov=null;}
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  stopLiveParams();
+}
+
+// Live param simulation
+let liveTimer=null;
+function startLiveParams(k){
+  stopLiveParams();
+  const pfx=(k==='alt1')?'a1':'a2';
+  function upd(){
+    const r=(b,d)=>(b+(Math.random()-.5)*d*2).toFixed(1);
+    document.getElementById(pfx+'rpm').textContent=r(3600,30);
+    document.getElementById(pfx+'freq').textContent=r(400,1);
+    document.getElementById(pfx+'oilin').textContent=r(72,3);
+    document.getElementById(pfx+'oilout').textContent=r(68,3);
+    document.getElementById(pfx+'flow').textContent=r(22,2);
+    document.getElementById(pfx+'pr').textContent=r(4.2,.3);
+    document.getElementById(pfx+'torq').textContent=r(142,5);
+    document.getElementById(pfx+'va').textContent=r(115,.5);
+    document.getElementById(pfx+'vb').textContent=r(115,.5);
+    document.getElementById(pfx+'vc').textContent=r(115,.5);
   }
-  updateClock();
-  setInterval(updateClock, 1000);
+  upd(); liveTimer=setInterval(upd,1200);
+}
+function stopLiveParams(){if(liveTimer){clearInterval(liveTimer);liveTimer=null;}}
 
-  // ── Elapsed timer ──
-  let elapsedSeconds = 14 * 60 + 32;
-  setInterval(() => {
-    elapsedSeconds++;
-    const h = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
-    const m = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
-    const s = String(elapsedSeconds % 60).padStart(2, '0');
-    document.getElementById('elapsed').textContent = `${h}:${m}:${s}`;
-  }, 1000);
+// ─── MODE / SCENARIO LOGIC ───
+// Wire IDs: all wires that need to be colored
+const ALL_WIRES=['w-alt1a','w-alt1b','w-alt1c','w-gcp1h','w-gcp1v',
+  'w-acmain','w-acbtc','w-acess',
+  'w-alt2a','w-alt2b','w-alt2c',
+  'w-dcgen',
+  'w-tru1in','w-tru1out','w-tlc1',
+  'w-tru2in','w-tru2out','w-tlc2',
+  'w-dcmain','w-dcbtc','w-dcess','w-dcemg','w-dcemgbus',
+  'w-gcp2h','w-glc3','w-bc','w-battfeed',
+  'w-hmdg1','w-cru1','w-icfs1',
+  'w-hmdg2','w-cru2','w-icfs2',
+  'w-emdpcont','w-emdpchg','w-battchg'];
 
-  // ── Simulated live data fluctuation ──
-  function rand(base, delta) {
-    return (base + (Math.random() - 0.5) * delta * 2).toFixed(1);
+const MODES={
+  normal:{
+    label:'NORMAL OPERATION', barColor:'#27ae60', fault:false,
+    live:['w-alt1a','w-alt1b','w-alt1c','w-gcp1h','w-gcp1v',
+          'w-acmain','w-acbtc','w-acess',
+          'w-alt2a','w-alt2b','w-alt2c',
+          'w-tru1in','w-tru1out','w-tlc1',
+          'w-tru2in','w-tru2out','w-tlc2',
+          'w-dcmain','w-dcbtc','w-dcess','w-dcemg','w-dcemgbus',
+          'w-gcp2h','w-glc3','w-bc','w-battfeed',
+          'w-hmdg1','w-cru1','w-icfs1',
+          'w-hmdg2','w-cru2','w-icfs2',
+          'w-battchg'],
+    alt1Active:true, alt2Active:true, dcgenActive:false, showInterr:false, showDcGcu:false
+  },
+  tru1fail:{
+    label:'TRU 1 FAILURE', barColor:'#e74c3c', fault:true,
+    live:['w-alt1a','w-alt1b','w-alt1c','w-gcp1h','w-gcp1v',
+          'w-acmain','w-acbtc','w-acess',
+          'w-alt2a','w-alt2b','w-alt2c',
+          'w-tru2in','w-tru2out','w-tlc2',
+          'w-dcbtc','w-dcess','w-dcemg','w-dcemgbus',
+          'w-glc3','w-bc','w-battfeed',
+          'w-hmdg1','w-cru1','w-icfs1',
+          'w-hmdg2','w-cru2','w-icfs2',
+          'w-battchg'],
+    alt1Active:true, alt2Active:true, dcgenActive:false, showInterr:false, showDcGcu:false
+  },
+  alt1fail:{
+    label:'ALT 1 FAILURE', barColor:'#e74c3c', fault:true,
+    live:['w-acmain','w-acbtc','w-acess',
+          'w-alt2a','w-alt2b','w-alt2c',
+          'w-tru1in','w-tru1out','w-tlc1',
+          'w-tru2in','w-tru2out','w-tlc2',
+          'w-dcmain','w-dcbtc','w-dcess','w-dcemg','w-dcemgbus',
+          'w-glc3','w-bc','w-battfeed',
+          'w-hmdg1','w-cru1','w-icfs1',
+          'w-hmdg2','w-cru2','w-icfs2',
+          'w-battchg'],
+    alt1Active:false, alt2Active:true, dcgenActive:false, showInterr:true, showDcGcu:false
+  },
+  tru12fail:{
+    label:'TRU 1 AND 2 FAILURE', barColor:'#e74c3c', fault:true,
+    live:['w-alt1a','w-alt1b','w-alt1c','w-gcp1h','w-gcp1v',
+          'w-acmain','w-acbtc','w-acess',
+          'w-alt2a','w-alt2b','w-alt2c',
+          'w-dcemgbus','w-glc3','w-bc','w-battfeed',
+          'w-hmdg2','w-cru2','w-icfs2',
+          'w-battchg'],
+    alt1Active:true, alt2Active:true, dcgenActive:false, showInterr:true, showDcGcu:true
+  },
+  alt12fail:{
+    label:'ALT 1 AND 2 FAILURE', barColor:'#e74c3c', fault:true,
+    live:['w-dcgen',
+          'w-dcemgbus','w-glc3','w-bc','w-battfeed',
+          'w-hmdg1','w-cru1','w-icfs1',
+          'w-hmdg2','w-cru2','w-icfs2',
+          'w-battchg'],
+    alt1Active:false, alt2Active:false, dcgenActive:true, showInterr:true, showDcGcu:false
+  },
+  alt12genfail:{
+    label:'ALT 1 AND 2 AND GEN FAILURE', barColor:'#e74c3c', fault:true,
+    live:['w-hmdg2','w-cru2','w-icfs2',
+          'w-dcemgbus','w-bc','w-battfeed','w-battchg','w-emdpcont','w-emdpchg'],
+    alt1Active:false, alt2Active:false, dcgenActive:false, showInterr:true, showDcGcu:false
+  },
+  acgpu:{
+    label:'ACGPU OPERATION', barColor:'#27ae60', fault:false,
+    live:['w-gcp1h','w-gcp1v','w-acmain','w-acbtc','w-acess',
+          'w-alt2a','w-alt2b','w-alt2c',
+          'w-tru1in','w-tru1out','w-tlc1',
+          'w-tru2in','w-tru2out','w-tlc2',
+          'w-dcmain','w-dcbtc','w-dcess','w-dcemg','w-dcemgbus',
+          'w-glc3','w-bc','w-battfeed',
+          'w-hmdg1','w-cru1','w-icfs1',
+          'w-hmdg2','w-cru2','w-icfs2','w-battchg'],
+    alt1Active:false, alt2Active:true, dcgenActive:false, showInterr:false, showDcGcu:false, acgpuActive:true
+  },
+  dcgpu:{
+    label:'DCGPU OPERATION', barColor:'#27ae60', fault:false,
+    live:['w-alt1a','w-alt1b','w-alt1c',
+          'w-acmain','w-acbtc','w-acess',
+          'w-alt2a','w-alt2b','w-alt2c',
+          'w-tru1in','w-tru1out','w-tlc1',
+          'w-tru2in','w-tru2out','w-tlc2',
+          'w-dcmain','w-dcbtc','w-dcess','w-dcemg','w-dcemgbus',
+          'w-gcp2h','w-glc3','w-bc','w-battfeed',
+          'w-hmdg1','w-cru1','w-icfs1',
+          'w-hmdg2','w-cru2','w-icfs2','w-battchg'],
+    alt1Active:true, alt2Active:true, dcgenActive:false, showInterr:false, showDcGcu:false, dcgpuActive:true
+  },
+  emdp:{
+    label:'EMDP OPERATION', barColor:'#27ae60', fault:false,
+    live:['w-alt1a','w-alt1b','w-alt1c',
+          'w-acmain','w-acbtc','w-acess',
+          'w-alt2a','w-alt2b','w-alt2c',
+          'w-tru1in','w-tru1out','w-tlc1',
+          'w-tru2in','w-tru2out','w-tlc2',
+          'w-dcmain','w-dcbtc','w-dcess','w-dcemg','w-dcemgbus',
+          'w-glc3','w-bc','w-battfeed',
+          'w-hmdg1','w-cru1','w-icfs1',
+          'w-hmdg2','w-cru2','w-icfs2',
+          'w-battchg','w-emdpcont','w-emdpchg'],
+    alt1Active:true, alt2Active:true, dcgenActive:false, showInterr:false, showDcGcu:false
   }
+};
 
-  function updateReadings() {
-    // Drive Stand 1
-    document.getElementById('rpm1').textContent   = rand(3600, 5);
-    document.getElementById('torq1').textContent  = rand(142.5, 3);
-    const oilTemp = parseFloat(rand(78.3, 1.5));
-    const oilEl = document.getElementById('oil1');
-    oilEl.textContent = oilTemp.toFixed(1) + '°C';
-    oilEl.className = 'val ' + (oilTemp > 80 ? 'fault' : oilTemp > 75 ? 'warn' : '');
-    document.getElementById('pr1').textContent    = rand(4.2, 0.2);
-    document.getElementById('vout1').textContent  = rand(115.0, 0.5);
-    document.getElementById('freq1').textContent  = rand(400.0, 0.3);
+function applyMode(key){
+  const m=MODES[key]||MODES.normal;
+  const liveSet=new Set(m.live);
 
-    // AC Load Bank
-    document.getElementById('acl1v').textContent = rand(115.0, 0.4);
-    document.getElementById('acl2v').textContent = rand(115.0, 0.4);
-    document.getElementById('acl3v').textContent = rand(115.0, 0.4);
-    document.getElementById('acl1a').textContent = rand(38.2, 1.5);
-    document.getElementById('acl2a').textContent = rand(37.9, 1.5);
-    document.getElementById('acl3a').textContent = rand(38.5, 1.5);
+  ALL_WIRES.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.setAttribute('stroke', liveSet.has(id)?'#27ae60':'#000');
+  });
 
-    // DC Load Bank
-    document.getElementById('tru1v').textContent = rand(28.0, 0.2);
-    document.getElementById('tru2v').textContent = rand(27.9, 0.2);
-    document.getElementById('tru1i').textContent = rand(88.4, 3);
-    document.getElementById('tru2i').textContent = rand(91.2, 3);
+  // ALT circles
+  document.getElementById('alt1-sym').setAttribute('fill', m.alt1Active?'#27ae60':'#7f8c8d');
+  document.getElementById('alt2-sym').setAttribute('fill', m.alt2Active?'#27ae60':'#7f8c8d');
+  document.getElementById('dcgen-sym').setAttribute('fill', m.dcgenActive?'#27ae60':'#95a5a6');
 
-    // HMDG
-    document.getElementById('hmdg1v').textContent = rand(115.0, 0.5);
-    document.getElementById('hmdg1f').textContent = rand(400.0, 0.3);
-    document.getElementById('hmdg2v').textContent = rand(115.2, 0.5);
-    document.getElementById('hmdg2f').textContent = rand(400.1, 0.3);
-    document.getElementById('hmdg3v').textContent = rand(112.8, 1.0);
-    document.getElementById('hmdg3f').textContent = rand(398.4, 0.8);
+  // DC GCU visibility
+  const vis = m.showDcGcu?'visible':'hidden';
+  document.getElementById('dcgcu-box').setAttribute('visibility',vis);
+  document.getElementById('dcgcu-txt').setAttribute('visibility',vis);
 
-    // Hydraulic
-    const hydIn = parseFloat(rand(280, 5));
-    document.getElementById('hyd-in').textContent   = hydIn.toFixed(0);
-    document.getElementById('hyd-flow').textContent = rand(22.4, 1.0);
-    document.getElementById('hyd-temp').textContent = rand(52.1, 0.5) + '°C';
-    document.getElementById('hyd-fill').style.width = Math.min(100, hydIn / 2.9).toFixed(1) + '%';
-  }
+  // ACGPU active — highlight AC GCU box
+  document.getElementById('acgcu-box').setAttribute('fill', m.acgpuActive?'#27ae60':'#ecf0f1');
+  document.getElementById('gppu-top').setAttribute('fill', m.acgpuActive?'#27ae60':'#ecf0f1');
 
-  setInterval(updateReadings, 1500);
+  // DCGPU active — highlight lower GPPU
+  document.getElementById('gppu-bot').setAttribute('fill', m.dcgpuActive?'#27ae60':'#ecf0f1');
+
+  // Interruption time display
+  document.getElementById('interr-time').setAttribute('visibility', m.showInterr?'visible':'hidden');
+
+  // Status bar
+  document.getElementById('sbar-msg').style.background = m.barColor;
+  document.getElementById('sbar-txt').textContent = m.label;
+
+  // Lamps
+  document.getElementById('lamp-fault').className='lamp '+(m.fault?'red':'off');
+  document.getElementById('lamp-idle').className='lamp '+(m.fault?'off':'ylw');
+  document.getElementById('lamp-run').className='lamp '+(m.fault?'off':'grn');
+}
+
+// Init
+applyMode('normal');
+
+// ─── TOGGLE SWITCH ───
+function toggleSw(el){
+  const lever=el.querySelector('.sw-lever');
+  const isUp=lever.style.bottom==='32px';
+  lever.style.bottom=isUp?'8px':'32px';
+  el.style.background=isUp?'#777':'#555';
+}
+
+// initialise lever positions
+document.querySelectorAll('.sw-lever').forEach(l=>l.style.bottom='8px');
 </script>
-
 </body>
 </html>
