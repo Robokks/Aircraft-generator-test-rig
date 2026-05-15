@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EPGS Test Rig — MIMIC Screen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      min-height: 100vh;
+    }
+
+    /* ── Top navigation bar ── */
+    .navbar {
+      background: #0f3460;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      border-bottom: 2px solid #e94560;
+      flex-wrap: wrap;
+    }
+
+    .navbar h1 {
+      color: #e94560;
+      font-size: 14px;
+      font-weight: bold;
+      margin-right: 16px;
+      white-space: nowrap;
+    }
+
+    .nav-btn {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      color: #a0c4ff;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: background 0.2s;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: #e94560;
+      color: #fff;
+      border-color: #e94560;
+    }
+
+    .nav-btn.ctrl {
+      background: #1b4332;
+      border-color: #52b788;
+      color: #52b788;
+    }
+
+    .nav-btn.ctrl:hover {
+      background: #52b788;
+      color: #000;
+    }
+
+    .nav-btn.stop {
+      background: #7b1111;
+      border-color: #e94560;
+      color: #e94560;
+    }
+
+    .nav-btn.stop:hover {
+      background: #e94560;
+      color: #fff;
+    }
+
+    /* ── Clock ── */
+    .clock {
+      margin-left: auto;
+      color: #52b788;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    /* ── Main layout ── */
+    .main {
+      display: grid;
+      grid-template-columns: 220px 1fr 200px;
+      grid-template-rows: auto auto;
+      gap: 8px;
+      padding: 8px;
+    }
+
+    /* ── Panel card ── */
+    .card {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 4px;
+      padding: 8px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #a0c4ff;
+      border-bottom: 1px solid #0f3460;
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+    }
+
+    /* ── LED indicator ── */
+    .led {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+      box-shadow: 0 0 4px currentColor;
+    }
+
+    .led.green  { background: #52b788; color: #52b788; }
+    .led.red    { background: #e94560; color: #e94560; }
+    .led.yellow { background: #ffd166; color: #ffd166; }
+    .led.grey   { background: #555; color: #555; box-shadow: none; }
+
+    /* ── Readout box ── */
+    .readout {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .readout label {
+      color: #8ab4f8;
+      font-size: 11px;
+    }
+
+    .readout .val {
+      background: #000;
+      border: 1px solid #0f3460;
+      color: #00ff88;
+      font-size: 12px;
+      padding: 1px 6px;
+      min-width: 70px;
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .readout .val.fault {
+      color: #e94560;
+    }
+
+    .readout .val.warn {
+      color: #ffd166;
+    }
+
+    /* ── Drive stand block ── */
+    .drive-stand {
+      background: #1a2a4a;
+      border: 2px solid #a0c4ff;
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+
+    .drive-stand .ds-title {
+      font-size: 12px;
+      font-weight: bold;
+      color: #ffd166;
+      margin-bottom: 8px;
+    }
+
+    .ds-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .motor-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 3px solid #52b788;
+      background: radial-gradient(circle, #1b4332 40%, #0d2218);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #52b788;
+      font-weight: bold;
+      text-align: center;
+      flex-shrink: 0;
+      animation: spin-slow 4s linear infinite;
+    }
+
+    .motor-icon.stopped {
+      border-color: #555;
+      color: #555;
+      animation: none;
+    }
+
+    @keyframes spin-slow {
+      from { box-shadow: 0 0 0 0 #52b788, inset 0 0 6px #52b788; }
+      50%  { box-shadow: 0 0 8px 2px #52b788, inset 0 0 6px #52b788; }
+      to   { box-shadow: 0 0 0 0 #52b788, inset 0 0 6px #52b788; }
+    }
+
+    .gen-icon {
+      width: 52px;
+      height: 52px;
+      border: 2px solid #ffd166;
+      background: #1a1a00;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #ffd166;
+      font-weight: bold;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .arrow {
+      font-size: 18px;
+      color: #52b788;
+      align-self: center;
+      flex-shrink: 0;
+    }
+
+    .ds-params {
+      flex: 1;
+      min-width: 100px;
+    }
+
+    /* ── LRU Rack ── */
+    .lru-rack {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .lru-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f1e3d;
+      border: 1px solid #0f3460;
+      padding: 4px 8px;
+      border-radius: 2px;
+    }
+
+    .lru-name {
+      font-weight: bold;
+      color: #a0c4ff;
+      font-size: 11px;
+      width: 70px;
+    }
+
+    .lru-status {
+      font-size: 11px;
+    }
+
+    /* ── Load Banks ── */
+    .load-bank {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .load-cell {
+      background: #0f1e3d;
+      border: 1px solid #1a5276;
+      padding: 4px;
+      text-align: center;
+      border-radius: 2px;
+    }
+
+    .load-cell .lc-label {
+      font-size: 9px;
+      color: #8ab4f8;
+      display: block;
+    }
+
+    .load-cell .lc-val {
+      font-size: 12px;
+      color: #00ff88;
+      font-weight: bold;
+    }
+
+    /* ── Hydraulic system ── */
+    .hyd-bar {
+      background: #0d1117;
+      border: 1px solid #1a5276;
+      height: 12px;
+      border-radius: 2px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .hyd-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1a5276, #2e86c1);
+      transition: width 0.5s;
+    }
+
+    /* ── HMDG bench ── */
+    .hmdg-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .hmdg-unit {
+      flex: 1;
+      background: #0f1e3d;
+      border: 1px solid #9b59b6;
+      border-radius: 4px;
+      padding: 6px;
+      text-align: center;
+    }
+
+    .hmdg-unit .hu-label {
+      font-size: 10px;
+      color: #d7bde2;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .hmdg-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #9b59b6;
+      background: #1a0030;
+      margin: 0 auto 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #d7bde2;
+      font-weight: bold;
+    }
+
+    /* ── Status bar ── */
+    .statusbar {
+      grid-column: 1 / -1;
+      background: #0f3460;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 4px 12px;
+      font-size: 11px;
+      border-top: 1px solid #e94560;
+      flex-wrap: wrap;
+    }
+
+    .sb-item { display: flex; align-items: center; gap: 4px; }
+    .sb-label { color: #8ab4f8; }
+    .sb-val   { color: #52b788; font-weight: bold; }
+
+    /* ── SFC panel ── */
+    .sfc-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .sfc-phase {
+      font-size: 11px;
+      color: #8ab4f8;
+    }
+
+    .contactor {
+      display: inline-block;
+      width: 16px;
+      height: 8px;
+      border: 1px solid #52b788;
+      background: #52b788;
+      border-radius: 1px;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+
+    .contactor.open {
+      background: transparent;
+      border-color: #555;
+    }
+
+    /* ── Fault table ── */
+    .fault-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .fault-table th {
+      background: #0f3460;
+      color: #a0c4ff;
+      font-size: 10px;
+      padding: 3px 6px;
+      text-align: left;
+    }
+    .fault-table td {
+      font-size: 10px;
+      padding: 3px 6px;
+      border-bottom: 1px solid #0f3460;
+    }
+    .fault-table tr:hover td { background: #1a2a4a; }
+    .ok    { color: #52b788; }
+    .fault { color: #e94560; }
+    .warn  { color: #ffd166; }
+
+    /* ── Section spanning ── */
+    .span2 { grid-column: span 2; }
+    .span3 { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+
+<!-- ══ Navigation Bar ══ -->
+<nav class="navbar">
+  <h1>EPGS TEST RIG</h1>
+  <button class="nav-btn ctrl">&#9654; TEST START</button>
+  <button class="nav-btn stop">&#9632; TEST STOP</button>
+  <button class="nav-btn">TEST CONFIG</button>
+  <button class="nav-btn">S/M PARAMETERS</button>
+  <button class="nav-btn active">MIMIC SCREEN</button>
+  <button class="nav-btn">TREND GRAPH</button>
+  <button class="nav-btn">LRU PARAMETERS</button>
+  <button class="nav-btn">GEARBOX PARAMS</button>
+  <button class="nav-btn">REPORT</button>
+  <button class="nav-btn">MODES</button>
+  <button class="nav-btn">LRU TESTS</button>
+  <div class="clock" id="clock">--:--:--</div>
+</nav>
+
+<!-- ══ Main Grid ══ -->
+<div class="main">
+
+  <!-- ── Column 1: Drive Stands + Hydraulic ── -->
+  <div style="display:flex; flex-direction:column; gap:8px;">
+
+    <!-- MG Drive Stand 1 -->
+    <div class="card">
+      <div class="card-title">MG Drive Stand 1</div>
+      <div class="drive-stand">
+        <div class="ds-title">IDG — 40 kVA (AC)</div>
+        <div class="ds-row">
+          <div>
+            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">VFD</div>
+            <div class="motor-icon" id="motor1">AC<br>MTR</div>
+          </div>
+          <div class="arrow">→</div>
+          <div>
+            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">HS/LS</div>
+            <div style="width:36px;height:52px;border:2px solid #a0c4ff;background:#0d1b33;display:flex;align-items:center;justify-content:center;font-size:9px;color:#a0c4ff;font-weight:bold;">GEAR<br>BOX</div>
+          </div>
+          <div class="arrow">→</div>
+          <div>
+            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">IDG</div>
+            <div class="gen-icon">40<br>kVA</div>
+          </div>
+        </div>
+        <div class="ds-params" style="margin-top:8px;">
+          <div class="readout"><label>RPM</label><span class="val" id="rpm1">3600</span></div>
+          <div class="readout"><label>Torque (N·m)</label><span class="val" id="torq1">142.5</span></div>
+          <div class="readout"><label>LUB Oil Temp (°C)</label><span class="val warn" id="oil1">78.3</span></div>
+          <div class="readout"><label>Oil Pressure (BAR)</label><span class="val" id="pr1">4.2</span></div>
+          <div class="readout"><label>IDG Output (VRMS)</label><span class="val" id="vout1">115.0</span></div>
+          <div class="readout"><label>IDG Freq (Hz)</label><span class="val" id="freq1">400.0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MG Drive Stand 2 -->
+    <div class="card">
+      <div class="card-title">MG Drive Stand 2</div>
+      <div class="drive-stand" style="border-color:#9b59b6;">
+        <div class="ds-title" style="color:#d7bde2;">DC GEN — 5 kW</div>
+        <div class="ds-row">
+          <div>
+            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">VFD</div>
+            <div class="motor-icon stopped">AC<br>MTR</div>
+          </div>
+          <div class="arrow" style="color:#9b59b6;">→</div>
+          <div>
+            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">HS/LS</div>
+            <div style="width:36px;height:52px;border:2px solid #9b59b6;background:#0d1b33;display:flex;align-items:center;justify-content:center;font-size:9px;color:#9b59b6;font-weight:bold;">GEAR<br>BOX</div>
+          </div>
+          <div class="arrow" style="color:#9b59b6;">→</div>
+          <div>
+            <div style="font-size:9px;color:#8ab4f8;text-align:center;margin-bottom:3px;">DC GEN</div>
+            <div class="gen-icon" style="border-color:#9b59b6;color:#d7bde2;">5<br>kW</div>
+          </div>
+        </div>
+        <div class="ds-params" style="margin-top:8px;">
+          <div class="readout"><label>RPM</label><span class="val grey" id="rpm2">0</span></div>
+          <div class="readout"><label>DC Voltage (V)</label><span class="val grey" id="vdc">0.0</span></div>
+          <div class="readout"><label>DC Current (A)</label><span class="val grey" id="idc">0.0</span></div>
+          <div class="readout"><label>Body Temp (°C)</label><span class="val grey" id="temp2">24.1</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hydraulic System -->
+    <div class="card">
+      <div class="card-title">Hydraulic System</div>
+      <div class="readout"><label>Power Pack</label><span class="val">ON</span></div>
+      <div class="readout"><label>Inlet Pressure (BAR)</label><span class="val" id="hyd-in">280</span></div>
+      <div class="readout"><label>Flow (lpm)</label><span class="val" id="hyd-flow">22.4</span></div>
+      <div class="readout"><label>Outlet Temp (°C)</label><span class="val" id="hyd-temp">52.1</span></div>
+      <div style="margin-top:4px;font-size:10px;color:#8ab4f8;">Pressure</div>
+      <div class="hyd-bar"><div class="hyd-fill" id="hyd-fill" style="width:93%;"></div></div>
+    </div>
+
+  </div>
+
+  <!-- ── Column 2: Centre — LRU Rack + HMDG Bench ── -->
+  <div style="display:flex; flex-direction:column; gap:8px;">
+
+    <!-- LRU Rack -->
+    <div class="card">
+      <div class="card-title">LRU Rack</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+
+        <div>
+          <div class="lru-rack">
+            <div class="lru-item">
+              <span class="lru-name">GCU 1</span>
+              <span class="lru-status"><span class="led green"></span>ONLINE</span>
+            </div>
+            <div class="lru-item">
+              <span class="lru-name">GCU 2</span>
+              <span class="lru-status"><span class="led grey"></span>STANDBY</span>
+            </div>
+            <div class="lru-item">
+              <span class="lru-name">ACPMU</span>
+              <span class="lru-status"><span class="led green"></span>ONLINE</span>
+            </div>
+            <div class="lru-item">
+              <span class="lru-name">DCPMU</span>
+              <span class="lru-status"><span class="led green"></span>ONLINE</span>
+            </div>
+            <div class="lru-item">
+              <span class="lru-name">TRU 1</span>
+              <span class="lru-status"><span class="led green"></span>ONLINE</span>
+            </div>
+            <div class="lru-item">
+              <span class="lru-name">TRU 2</span>
+              <span class="lru-status"><span class="led green"></span>ONLINE</span>
+            </div>
+            <div class="lru-item">
+              <span class="lru-name">GPPU</span>
+              <span class="lru-status"><span class="led yellow"></span>STBY</span>
+            </div>
+            <div class="lru-item">
+              <span class="lru-name">CRU 1</span>
+              <span class="lru-status"><span class="led green"></span>ONLINE</span>
+            </div>
+            <div class="lru-item">
+              <span class="lru-name">CRU 2</span>
+              <span class="lru-status"><span class="led green"></span>ONLINE</span>
+            </div>
+            <div class="lru-item">
+              <span class="lru-name">BATTERY</span>
+              <span class="lru-status"><span class="led green"></span>94% SOC</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contactor / Bus status -->
+        <div>
+          <div style="font-size:10px;color:#ffd166;margin-bottom:6px;font-weight:bold;">BUS / CONTACTOR STATUS</div>
+          <table style="width:100%;font-size:10px;border-collapse:collapse;">
+            <tr><td style="color:#8ab4f8;padding:2px 0;">GPC-1</td><td><span class="contactor"></span>CLOSED</td></tr>
+            <tr><td style="color:#8ab4f8;padding:2px 0;">GLC-1</td><td><span class="contactor"></span>CLOSED</td></tr>
+            <tr><td style="color:#8ab4f8;padding:2px 0;">GLC-2</td><td><span class="contactor open"></span><span style="color:#555;">OPEN</span></td></tr>
+            <tr><td style="color:#8ab4f8;padding:2px 0;">AC-BTC</td><td><span class="contactor"></span>CLOSED</td></tr>
+            <tr><td style="color:#8ab4f8;padding:2px 0;">GPC-2</td><td><span class="contactor open"></span><span style="color:#555;">OPEN</span></td></tr>
+            <tr><td style="color:#8ab4f8;padding:2px 0;">TLC-1</td><td><span class="contactor"></span>CLOSED</td></tr>
+            <tr><td style="color:#8ab4f8;padding:2px 0;">TLC-2</td><td><span class="contactor"></span>CLOSED</td></tr>
+            <tr><td style="color:#8ab4f8;padding:2px 0;">DC-BTC</td><td><span class="contactor"></span>CLOSED</td></tr>
+            <tr><td style="color:#8ab4f8;padding:2px 0;">BC (BATT)</td><td><span class="contactor"></span>CLOSED</td></tr>
+            <tr><td style="color:#8ab4f8;padding:2px 0;">EMDP-CC</td><td><span class="contactor open"></span><span style="color:#555;">OPEN</span></td></tr>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HMDG Test Bench -->
+    <div class="card">
+      <div class="card-title">HMDG Test Bench</div>
+      <div class="hmdg-row">
+        <div class="hmdg-unit">
+          <span class="hu-label">HMDG 1<br>5 kVA</span>
+          <div class="hmdg-circle">5kVA</div>
+          <div class="readout" style="justify-content:center;"><span class="led green"></span></div>
+          <div class="readout"><label>V (VRMS)</label><span class="val" style="min-width:50px;font-size:11px;" id="hmdg1v">115.0</span></div>
+          <div class="readout"><label>Hz</label><span class="val" style="min-width:50px;font-size:11px;" id="hmdg1f">400.0</span></div>
+        </div>
+        <div class="hmdg-unit">
+          <span class="hu-label">HMDG 2<br>400 W</span>
+          <div class="hmdg-circle">400W</div>
+          <div class="readout" style="justify-content:center;"><span class="led green"></span></div>
+          <div class="readout"><label>V (VRMS)</label><span class="val" style="min-width:50px;font-size:11px;" id="hmdg2v">115.2</span></div>
+          <div class="readout"><label>Hz</label><span class="val" style="min-width:50px;font-size:11px;" id="hmdg2f">400.1</span></div>
+        </div>
+        <div class="hmdg-unit">
+          <span class="hu-label">HMDG 3<br>350 W</span>
+          <div class="hmdg-circle">350W</div>
+          <div class="readout" style="justify-content:center;"><span class="led yellow"></span></div>
+          <div class="readout"><label>V (VRMS)</label><span class="val warn" style="min-width:50px;font-size:11px;" id="hmdg3v">112.8</span></div>
+          <div class="readout"><label>Hz</label><span class="val warn" style="min-width:50px;font-size:11px;" id="hmdg3f">398.4</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fault log -->
+    <div class="card">
+      <div class="card-title">Fault / Event Log</div>
+      <table class="fault-table">
+        <thead>
+          <tr><th>Time</th><th>LRU</th><th>Parameter</th><th>Status</th></tr>
+        </thead>
+        <tbody id="fault-log">
+          <tr><td>09:14:32</td><td>GCU-1</td><td>IDG_LUB_OIL_TEMP</td><td class="warn">WARN 78.3°C</td></tr>
+          <tr><td>09:10:05</td><td>HMDG-3</td><td>HMDG_STATUS</td><td class="warn">VOLT LOW 112.8V</td></tr>
+          <tr><td>09:00:00</td><td>SYS</td><td>TEST_START</td><td class="ok">OK</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ── Column 3: Load Banks + SFC ── -->
+  <div style="display:flex; flex-direction:column; gap:8px;">
+
+    <!-- AC Load Bank -->
+    <div class="card">
+      <div class="card-title">AC Load Bank</div>
+      <div class="load-bank">
+        <div class="load-cell"><span class="lc-label">L1(V)</span><span class="lc-val" id="acl1v">114.9</span></div>
+        <div class="load-cell"><span class="lc-label">L2(V)</span><span class="lc-val" id="acl2v">115.1</span></div>
+        <div class="load-cell"><span class="lc-label">L3(V)</span><span class="lc-val" id="acl3v">115.0</span></div>
+        <div class="load-cell"><span class="lc-label">L1(A)</span><span class="lc-val" id="acl1a">38.2</span></div>
+        <div class="load-cell"><span class="lc-label">L2(A)</span><span class="lc-val" id="acl2a">37.9</span></div>
+        <div class="load-cell"><span class="lc-label">L3(A)</span><span class="lc-val" id="acl3a">38.5</span></div>
+        <div class="load-cell"><span class="lc-label">L1(PF)</span><span class="lc-val">0.85</span></div>
+        <div class="load-cell"><span class="lc-label">L2(PF)</span><span class="lc-val">0.85</span></div>
+        <div class="load-cell"><span class="lc-label">L3(PF)</span><span class="lc-val">0.85</span></div>
+      </div>
+    </div>
+
+    <!-- DC Load Bank -->
+    <div class="card">
+      <div class="card-title">DC Load Bank — I(A)</div>
+      <div class="load-bank">
+        <div class="load-cell"><span class="lc-label">TRU1-I</span><span class="lc-val" id="tru1i">88.4</span></div>
+        <div class="load-cell"><span class="lc-label">TRU1-V</span><span class="lc-val" id="tru1v">28.0</span></div>
+        <div class="load-cell"><span class="lc-label">TRU1-T</span><span class="lc-val" id="tru1t">62°C</span></div>
+        <div class="load-cell"><span class="lc-label">TRU2-I</span><span class="lc-val" id="tru2i">91.2</span></div>
+        <div class="load-cell"><span class="lc-label">TRU2-V</span><span class="lc-val" id="tru2v">27.9</span></div>
+        <div class="load-cell"><span class="lc-label">TRU2-T</span><span class="lc-val" id="tru2t">64°C</span></div>
+        <div class="load-cell"><span class="lc-label">EMG-V</span><span class="lc-val" id="emgv">27.8</span></div>
+        <div class="load-cell"><span class="lc-label">GPU-V</span><span class="lc-val">0.0</span></div>
+        <div class="load-cell"><span class="lc-label">BATT-V</span><span class="lc-val">29.1</span></div>
+      </div>
+    </div>
+
+    <!-- SFC / Phase sequence -->
+    <div class="card">
+      <div class="card-title">SFC — Phase Sequence</div>
+      <div class="sfc-row"><span class="sfc-phase">L1 (V)</span><span class="val" style="background:#000;border:1px solid #0f3460;color:#00ff88;padding:1px 6px;font-size:12px;">114.9</span></div>
+      <div class="sfc-row" style="margin-top:4px;"><span class="sfc-phase">L2 (V)</span><span class="val" style="background:#000;border:1px solid #0f3460;color:#00ff88;padding:1px 6px;font-size:12px;">115.1</span></div>
+      <div class="sfc-row" style="margin-top:4px;"><span class="sfc-phase">L3 (V)</span><span class="val" style="background:#000;border:1px solid #0f3460;color:#00ff88;padding:1px 6px;font-size:12px;">115.0</span></div>
+      <div class="sfc-row" style="margin-top:4px;"><span class="sfc-phase">FREQ (Hz)</span><span class="val" style="background:#000;border:1px solid #0f3460;color:#00ff88;padding:1px 6px;font-size:12px;">400.0</span></div>
+      <div style="margin-top:8px;font-size:10px;color:#8ab4f8;">Phase Sequence</div>
+      <div style="margin-top:4px;font-size:13px;color:#52b788;font-weight:bold;">L1 → L2 → L3 ✓</div>
+    </div>
+
+    <!-- GCU Parameters quick view -->
+    <div class="card">
+      <div class="card-title">GCU-1 Parameters</div>
+      <div class="readout"><label>IDG_LUB_OIL_TEMP</label><span class="val warn">78.3°C</span></div>
+      <div class="readout"><label>IDG_LUB_OIL_EXC</label><span class="val">0.0°C</span></div>
+      <div class="readout"><label>INIT_BIT_GCU_1</label><span class="val">0.0</span></div>
+      <div class="readout"><label>BKUP_POWER_ON</label><span class="val fault">FALSE</span></div>
+      <div class="readout"><label>IDG_FAULT</label><span class="val ok">FALSE</span></div>
+      <div class="readout"><label>ALT1_SRD_FAULT</label><span class="val ok">FALSE</span></div>
+      <div class="readout"><label>ALT1_FEEDER_FAULT</label><span class="val ok">FALSE</span></div>
+      <div class="readout"><label>GCU_1_FAULT</label><span class="val ok">FALSE</span></div>
+    </div>
+
+  </div>
+
+  <!-- ── Status Bar ── -->
+  <div class="statusbar span3">
+    <div class="sb-item"><span class="led green"></span><span class="sb-label">MODE:</span><span class="sb-val">NORMAL OPERATION</span></div>
+    <div class="sb-item"><span class="sb-label">TEST ID:</span><span class="sb-val">EPGS-2026-005</span></div>
+    <div class="sb-item"><span class="sb-label">ELAPSED:</span><span class="sb-val" id="elapsed">00:14:32</span></div>
+    <div class="sb-item"><span class="sb-label">ACPMU RS422:</span><span class="sb-val">OK</span></div>
+    <div class="sb-item"><span class="sb-label">DCPMU RS422:</span><span class="sb-val">OK</span></div>
+    <div class="sb-item"><span class="sb-label">ARINC-429:</span><span class="sb-val">OK</span></div>
+    <div class="sb-item"><span class="sb-label">ACTIVE FAULTS:</span><span class="sb-val warn">2</span></div>
+    <div class="sb-item" style="margin-left:auto;"><span class="sb-label">CABS / DRDO — EPGS TEST RIG v1.0</span></div>
+  </div>
+
+</div>
+
+<script>
+  // ── Clock ──
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toTimeString().slice(0, 8);
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ── Elapsed timer ──
+  let elapsedSeconds = 14 * 60 + 32;
+  setInterval(() => {
+    elapsedSeconds++;
+    const h = String(Math.floor(elapsedSeconds / 3600)).padStart(2, '0');
+    const m = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, '0');
+    const s = String(elapsedSeconds % 60).padStart(2, '0');
+    document.getElementById('elapsed').textContent = `${h}:${m}:${s}`;
+  }, 1000);
+
+  // ── Simulated live data fluctuation ──
+  function rand(base, delta) {
+    return (base + (Math.random() - 0.5) * delta * 2).toFixed(1);
+  }
+
+  function updateReadings() {
+    // Drive Stand 1
+    document.getElementById('rpm1').textContent   = rand(3600, 5);
+    document.getElementById('torq1').textContent  = rand(142.5, 3);
+    const oilTemp = parseFloat(rand(78.3, 1.5));
+    const oilEl = document.getElementById('oil1');
+    oilEl.textContent = oilTemp.toFixed(1) + '°C';
+    oilEl.className = 'val ' + (oilTemp > 80 ? 'fault' : oilTemp > 75 ? 'warn' : '');
+    document.getElementById('pr1').textContent    = rand(4.2, 0.2);
+    document.getElementById('vout1').textContent  = rand(115.0, 0.5);
+    document.getElementById('freq1').textContent  = rand(400.0, 0.3);
+
+    // AC Load Bank
+    document.getElementById('acl1v').textContent = rand(115.0, 0.4);
+    document.getElementById('acl2v').textContent = rand(115.0, 0.4);
+    document.getElementById('acl3v').textContent = rand(115.0, 0.4);
+    document.getElementById('acl1a').textContent = rand(38.2, 1.5);
+    document.getElementById('acl2a').textContent = rand(37.9, 1.5);
+    document.getElementById('acl3a').textContent = rand(38.5, 1.5);
+
+    // DC Load Bank
+    document.getElementById('tru1v').textContent = rand(28.0, 0.2);
+    document.getElementById('tru2v').textContent = rand(27.9, 0.2);
+    document.getElementById('tru1i').textContent = rand(88.4, 3);
+    document.getElementById('tru2i').textContent = rand(91.2, 3);
+
+    // HMDG
+    document.getElementById('hmdg1v').textContent = rand(115.0, 0.5);
+    document.getElementById('hmdg1f').textContent = rand(400.0, 0.3);
+    document.getElementById('hmdg2v').textContent = rand(115.2, 0.5);
+    document.getElementById('hmdg2f').textContent = rand(400.1, 0.3);
+    document.getElementById('hmdg3v').textContent = rand(112.8, 1.0);
+    document.getElementById('hmdg3f').textContent = rand(398.4, 0.8);
+
+    // Hydraulic
+    const hydIn = parseFloat(rand(280, 5));
+    document.getElementById('hyd-in').textContent   = hydIn.toFixed(0);
+    document.getElementById('hyd-flow').textContent = rand(22.4, 1.0);
+    document.getElementById('hyd-temp').textContent = rand(52.1, 0.5) + '°C';
+    document.getElementById('hyd-fill').style.width = Math.min(100, hydIn / 2.9).toFixed(1) + '%';
+  }
+
+  setInterval(updateReadings, 1500);
+</script>
+
+</body>
+</html>
